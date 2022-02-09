@@ -49,6 +49,20 @@ enum package_error {
 
 };
 
+
+enum device_error {
+    DEVICE_OK = 0,
+    DEVICE_PTR_NULL = 1,
+    DEVICE_OPEN_FAIL = 2,
+    DEVICE_WRITE_FAIL =3,
+    DEVICE_READ_FAIL =4,
+    DEVICE_EXIST = 5,
+    DEVICE_LIST_NOT_EXIST = 6,
+    DEVICE_UNKNOW_COMMOND,
+
+};
+
+
 typedef struct TerminalInfo {
     uint8_t id[4];
     uint8_t pid[2];

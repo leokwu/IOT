@@ -17,7 +17,7 @@
 #include <sys/file.h>
 
 #include "serial_control.h"
-#include "list_control.h"
+#include "device_manager.h"
 
 static int g_fd = -1;
 
@@ -157,29 +157,9 @@ int main(int argc, char **argv)
     printf("ter_info.mac: \n");
     dumpData(ter_info.mac, 8);
 
-    int insert_ret =  insert_item_to_list((void *)&ter_info);
+//    int insert_ret =  insert_item_to_list((void *)&ter_info);
+    add_device((void *)&ter_info);
 
-    uint8_t ter_label[17] = {0};
-    snprintf(ter_label, sizeof(ter_label), "%02x%02x%02x%02x%02x%02x%02x%02x",
-             id[0],
-             id[1],
-             id[2],
-             id[3],
-             pid[0],
-             pid[1],
-             vid[0],
-             vid[1]);
-//    memcpy(ter_label, id, 4);
-//    memcpy(&ter_label[4], pid, 2);
-//    memcpy(&ter_label[6], vid, 2);
-    printf("ter_label: \n");
-    dumpData(ter_label, sizeof(ter_label));
-    uint8_t * mac_result = get_mac_from_list(ter_label);
-    printf("mac_result: %s\n", mac_result);
-    if(mac_result) {
-        free(mac_result);
-        mac_result = NULL;
-    }
 
 
     while (getchar() != 'q') {
