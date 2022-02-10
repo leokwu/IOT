@@ -48,86 +48,58 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
 }
 
 
-static size_t get_file_size(const char *filepath)
-{
-    if(NULL == filepath)
-        return 0;
-    struct stat filestat;
-    memset(&filestat, 0, sizeof(struct stat));
-    if(0 == stat(filepath, &filestat)) {
-        printf("filestat.st_size: %ld\n", filestat.st_size);
-        return filestat.st_size;
-    } else {
-        printf("file size: 0\n");
-        return 0;
-    }
-
-}
-
-static char *read_file_to_buf(const char *filepath)
-{
-    if(NULL == filepath)
-    {
+static cJSON* readJsonFile(char *fileName) {
+    if (NULL == fileName) {
         return NULL;
     }
-    size_t size = get_file_size(filepath);
-    if(0 == size)
-        return NULL;
 
-    char *buf = malloc(size + 1);
-    if(NULL == buf) {
-        printf("malloc error\n");
-        return NULL;
-    }
-    memset(buf, 0, size+1);
+    FILE *fp = NULL;
+    uint8_t *data = NULL;
 
-    FILE *fp = fopen(filepath, "r");
-    size_t readSize = fread(buf, 1, size, fp);
-    if(readSize != size)
-    {
-        printf("readSize: %ld != size: %ld", readSize, size);
-        free(buf);
-        buf = NULL;
-        if (fp) {
-            fclose(fp);
-            fp = NULL;
-        }
-        return NULL;
-    }
-    buf[size] = 0;
-
-    if (fp) {
+    fp = fopen(fileName, "r");
+    if (NULL != fp) {
+        fseek(fp, 0, SEEK_END);
+        long len = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        data = (uint8_t*)malloc(len + 1);
+        fread(data, 1, len, fp);
         fclose(fp);
-        fp = NULL;
+    }
+    
+    printf("readJsonFile data:%s\n", data);
+    cJSON *json_root = cJSON_Parse(data);
+    if (NULL == json_root) {
+        printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());
     }
 
-    return buf;
+    if (NULL != data) {
+        free(data);
+    }
+
+    return json_root;
 }
 
 
-static cJSON *prepare_parse_json(const char *filePath)
-{
-    if(NULL == filePath)
-    {
-        printf("input para is NULL\n");
-        return NULL;
-    }
-    char *buf = read_file_to_buf(filePath);
-    if (NULL == buf) {
-        printf("read file to buf failed\n");
-        return NULL;
+static void writeJsonFile(char *fileName, cJSON *json) {
+    if (NULL == json || NULL == fileName) {
+        return;
     }
 
-    cJSON *pTemp = cJSON_Parse(buf);
-    if (buf) {
-        free(buf);
-        buf = NULL;
+    char *cjson = cJSON_Print(json);
+
+    FILE *fp = NULL;
+    fp = fopen(fileName, "w+");
+    if (NULL != fp) {
+        fwrite(cjson, strlen(cjson), 1, fp);
+        fclose(fp);
     }
 
-    return pTemp;
+    if (NULL != cjson) {
+        free(cjson);
+    }
 }
 
-static int firstadd_device(void *data)
+static int firstAddDevice(void *data)
 {
 
     TerminalInfo *device_info = (TerminalInfo *)data;
@@ -140,19 +112,19 @@ static int firstadd_device(void *data)
     uint8_t transit[16] = {0};
     memset(transit, 0, 16);
     memcpy(transit, device_info->id, sizeof(device_info->id));
-    cJSON_AddRawToObject(item, "device_id", transit);
+    cJSON_AddStringToObject(item, "device_id", transit);
 
     memset(transit, 0, 16);
     memcpy(transit, device_info->pid, sizeof(device_info->pid));
-    cJSON_AddRawToObject(item, "device_pid", transit);
+    cJSON_AddStringToObject(item, "device_pid", transit);
 
     memset(transit, 0, 16);
     memcpy(transit, device_info->vid, sizeof(device_info->vid));
-    cJSON_AddRawToObject(item, "device_vid", transit);
+    cJSON_AddStringToObject(item, "device_vid", transit);
 
     memset(transit, 0, 16);
     memcpy(transit, device_info->mac, sizeof(device_info->mac));
-    cJSON_AddRawToObject(item, "device_mac", transit);
+    cJSON_AddStringToObject(item, "device_mac", transit);
 
     uint8_t label[64] = {0};
     snprintf(label, sizeof(label), "%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -168,25 +140,7 @@ static int firstadd_device(void *data)
     cJSON_AddItemToObject(device_list, label, item);
     cJSON_AddItemToObject(root, "device_list", device_list);
 
-    char *json_data = cJSON_Print(root);
-    FILE *fp = fopen(DEVICE_LIST_FILE, "w+");
-    if (fp == NULL) {
-        cJSON_Delete(root);
-        printf("open json file failed\n");
-        return DEVICE_OPEN_FAIL;
-    }
-
-    fwrite(json_data, sizeof(char), strlen(json_data) + 1, fp);
-    dumpData_leok(json_data, strlen(json_data) + 1);
-
-    if (fp) {
-        fclose(fp);
-        fp = NULL;
-    }
-
-    if (json_data) {
-        cJSON_free(json_data);
-    }
+    writeJsonFile(DEVICE_LIST_FILE, root);
 
     cJSON_Delete(root);
 
@@ -194,11 +148,11 @@ static int firstadd_device(void *data)
 
 }
 
-static int insert_device(void *data)
+static int insertDevice(void *data)
 {
 
     //TO DO:
-    cJSON *root = prepare_parse_json(DEVICE_LIST_FILE);
+    cJSON *root = readJsonFile(DEVICE_LIST_FILE);
 
     TerminalInfo *device_info = (TerminalInfo *)data;
     uint8_t label[64] = {0};
@@ -212,56 +166,38 @@ static int insert_device(void *data)
              device_info->vid[0],
              device_info->vid[1]);
 
-    cJSON *device_list = cJSON_GetObjectItem(root, label);
+    cJSON *device_list = cJSON_GetObjectItem(root, "device_list");
     if (NULL != device_list) {
         cJSON *item_name = cJSON_GetObjectItem(device_list, label);
         if (NULL != item_name) {
             printf("device exist\n");
             return DEVICE_EXIST;
         } else {
+            printf("device not exist && insert\n");
             cJSON *item = cJSON_CreateObject();
 
             uint8_t transit[16] = {0};
             memset(transit, 0, 16);
             memcpy(transit, device_info->id, sizeof(device_info->id));
-            cJSON_AddRawToObject(item, "device_id", transit);
+            cJSON_AddStringToObject(item, "device_id", transit);
 
             memset(transit, 0, 16);
             memcpy(transit, device_info->pid, sizeof(device_info->pid));
-            cJSON_AddRawToObject(item, "device_pid", transit);
+            cJSON_AddStringToObject(item, "device_pid", transit);
 
             memset(transit, 0, 16);
             memcpy(transit, device_info->vid, sizeof(device_info->vid));
-            cJSON_AddRawToObject(item, "device_vid", transit);
+            cJSON_AddStringToObject(item, "device_vid", transit);
 
             memset(transit, 0, 16);
             memcpy(transit, device_info->mac, sizeof(device_info->mac));
-            cJSON_AddRawToObject(item, "device_mac", transit);
+            cJSON_AddStringToObject(item, "device_mac", transit);
 
-            cJSON_AddItemToObject(root, label, item);
+            cJSON_AddItemToObject(device_list, label, item);
 
-            char *json_data = cJSON_Print(root);
-            FILE *fp = fopen(DEVICE_LIST_FILE, "w+");
-            if (fp == NULL) {
-                cJSON_Delete(root);
-                printf("open json file failed\n");
-                return DEVICE_OPEN_FAIL;
-            }
-
-            fwrite(json_data, sizeof(char), strlen(json_data) + 1, fp);
-            dumpData_leok(json_data, strlen(json_data) + 1);
-
-            if (fp) {
-                fclose(fp);
-                fp = NULL;
-            }
-
-            if (json_data) {
-                cJSON_free(json_data);
-            }
+            writeJsonFile(DEVICE_LIST_FILE, root);
 
             cJSON_Delete(root);
-
             return DEVICE_OK;
         }
     } else {
@@ -280,9 +216,9 @@ int add_device(void *data)
     }
 
     if ((access(DEVICE_LIST_FILE, F_OK)) != -1) {
-        insert_device(data);
+        insertDevice(data);
     } else {
-        firstadd_device(data);
+        firstAddDevice(data);
     }
 }
 

@@ -133,25 +133,25 @@ int main(int argc, char **argv)
 #endif
 
     TerminalInfo ter_info = {0};
-    uint8_t id[4] = {0x01, 0x02, 0x03, 0x04};
+    uint8_t id[4] = {1, 2, 3, 4};
 //    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
     memcpy(ter_info.id, id, sizeof(ter_info.id));
     printf("ter_info.id: \n");
     dumpData(ter_info.id, 4);
 
-    uint8_t pid[2] = {0x05, 0x06};
+    uint8_t pid[2] = {5, 6};
 //    snprintf(ter_info.pid, sizeof(ter_info.pid), "%s", pid);
     memcpy(ter_info.pid, pid, sizeof(ter_info.pid));
     printf("ter_info.pid: \n");
     dumpData(ter_info.pid, 2);
 
-    uint8_t vid[2] = {0x07, 0x08};
+    uint8_t vid[2] = {7, 8};
 //    snprintf(ter_info.vid, sizeof(ter_info.vid), "%s", vid);
     memcpy(ter_info.vid, vid, sizeof(ter_info.vid));
     printf("ter_info.vid: \n");
     dumpData(ter_info.vid, 2);
 
-    uint8_t mac[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    uint8_t mac[8] = {11, 22, 33, 44, 55, 66, 77, 88};
 //    snprintf(ter_info.mac, sizeof(ter_info.mac), "%s", mac);
     memcpy(ter_info.mac, mac, sizeof(ter_info.mac));
     printf("ter_info.mac: \n");
