@@ -48,6 +48,58 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
 }
 
 
+static void printJsonObjvalue(const cJSON *json) {
+    if (NULL == json) {
+        printf("NULL object!\n");
+        return;
+    }
+
+    switch (json->type) {
+        case cJSON_False:
+            printf("%s: false\n", json->string);
+            break;
+        case cJSON_True:
+            printf("%s: true\n", json->string);
+            break;
+        case cJSON_NULL:
+            printf("%s: cJSON_NULL\n", json->string);
+            break;
+        case cJSON_Number:
+            printf("%s: %d, %f\n", json->string, json->valueint, json->valuedouble);
+            break;
+        case cJSON_String:
+            printf("%s: %s\n", json->string, json->valuestring);
+            break;
+        case cJSON_Array:
+            printf("%s: cJSON_Array\n", json->string);
+            break;
+        case cJSON_Object:
+            printf("%s: cJSON_Object\n", json->string);
+            break;
+        default:
+            printf("unknown type\n");
+            break;
+    }
+}
+
+
+static void freeJson(cJSON *json) {
+    if (json != NULL) {
+        cJSON_Delete(json);
+    }
+}
+
+
+static void printfJson(cJSON *json) {
+    if (NULL == json) {
+        return;
+    }
+    char *cjson=cJSON_Print(json);
+    printf("json:%s\n", cjson);
+    free(cjson);
+}
+
+
 static cJSON* readJsonFile(char *fileName) {
     if (NULL == fileName) {
         return NULL;
@@ -142,7 +194,7 @@ static int firstAddDevice(void *data)
 
     writeJsonFile(DEVICE_LIST_FILE, root);
 
-    cJSON_Delete(root);
+    freeJson(root);
 
     return DEVICE_OK;
 
@@ -197,11 +249,11 @@ static int insertDevice(void *data)
 
             writeJsonFile(DEVICE_LIST_FILE, root);
 
-            cJSON_Delete(root);
+            freeJson(root);
             return DEVICE_OK;
         }
     } else {
-            printf("device list not exist\n");
+            printf("device list node not exist\n");
             return DEVICE_LIST_NOT_EXIST;
     }
 }
