@@ -94,7 +94,7 @@ static void printfJson(cJSON *json) {
     if (NULL == json) {
         return;
     }
-    char *cjson=cJSON_Print(json);
+    char *cjson = cJSON_Print(json);
     printf("json:%s\n", cjson);
     free(cjson);
 }
@@ -203,7 +203,7 @@ static int firstAddDevice(void *data)
 static int insertDevice(void *data)
 {
 
-    //TO DO:
+    //TODO:
     cJSON *root = readJsonFile(DEVICE_LIST_FILE);
 
     TerminalInfo *device_info = (TerminalInfo *)data;
@@ -259,23 +259,90 @@ static int insertDevice(void *data)
 }
 
 
-int add_device(void *data)
+static TerminalInfo *convertToStructure(void *data)
+{
+    cJSON *root = readJsonFile(DEVICE_LIST_FILE);
+    printfJson(root);
+
+    cJSON *device_list = cJSON_GetObjectItem(root, "device_list");
+    if (NULL != device_list) {
+        cJSON *item_name = cJSON_GetObjectItem(device_list, data);
+        if (NULL != item_name) {
+            //TODO:
+            cJSON *device_id = cJSON_GetObjectItem(item_name, "device_id");
+            cJSON *device_pid = cJSON_GetObjectItem(item_name, "device_pid");
+            cJSON *device_vid = cJSON_GetObjectItem(item_name, "device_vid");
+            cJSON *device_mac = cJSON_GetObjectItem(item_name, "device_mac");
+
+            TerminalInfo *device_info = (TerminalInfo *)malloc(sizeof(TerminalInfo));
+            memcpy(device_info->id, device_id->valuestring, sizeof(device_info->id));
+            dumpData_leok(device_info->id, sizeof(device_info->id));
+            memcpy(device_info->pid, device_pid->valuestring, sizeof(device_info->pid));
+            dumpData_leok(device_info->pid, sizeof(device_info->pid));
+            memcpy(device_info->vid, device_vid->valuestring, sizeof(device_info->vid));
+            dumpData_leok(device_info->vid, sizeof(device_info->vid));
+            memcpy(device_info->mac, device_mac->valuestring, sizeof(device_info->mac));
+            dumpData_leok(device_info->mac, sizeof(device_info->mac));
+            /*
+            device_info->id = device_id->valuestring;
+            device_info->pid = device_pid->valuestring;
+            device_info->vid = device_vid->valuestring;
+            device_info->mac = device_mac->valuestring;
+             */
+            return device_info;
+
+        } else {
+            printf("convertToComment device node not exist\n");
+            return NULL;
+        }
+
+    } else {
+        printf("convertToComment device_list node not exist\n");
+        return NULL;
+    }
+}
+
+void freeStructure(TerminalInfo *device_info)
+{
+    if (device_info != NULL) {
+        free(device_info);
+        device_info = NULL;
+    }
+}
+
+int addDevice(void *data)
 {
 
+    int ret = 0;
+
     if (data == NULL) {
-        printf("input data null\n");
+        printf("add_device input data null\n");
         return DEVICE_PTR_NULL;
     }
 
     if ((access(DEVICE_LIST_FILE, F_OK)) != -1) {
-        insertDevice(data);
+        ret = insertDevice(data);
     } else {
-        firstAddDevice(data);
+        ret = firstAddDevice(data);
     }
+    return ret;
 }
 
-int select_device(void *data)
+TerminalInfo * selectDevice(void *data)
 {
+    // TODO:
 
+    if (data == NULL) {
+        printf("select_device input data null\n");
+        return NULL;
+    }
+
+    if ((access(DEVICE_LIST_FILE, F_OK)) != -1) { //file exist
+        return convertToStructure(data);
+    } else {// not exist
+        return NULL;
+    }
 
 }
+
+

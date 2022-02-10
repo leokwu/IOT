@@ -10,8 +10,9 @@ extern "C" {
 
 #include <common.h>
 
-int add_device(void *data);
-int select_device(void *data);
+int addDevice(void *data);
+TerminalInfo *selectDevice(void *data);
+void freeStructure(TerminalInfo *device_info);
 
 #ifdef __cplusplus
 }

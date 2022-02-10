@@ -132,34 +132,46 @@ int main(int argc, char **argv)
 
 #endif
 
-    TerminalInfo ter_info = {0};
+    TerminalInfo device_info = {0};
     uint8_t id[4] = {1, 2, 3, 4};
 //    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
-    memcpy(ter_info.id, id, sizeof(ter_info.id));
-    printf("ter_info.id: \n");
-    dumpData(ter_info.id, 4);
+    memcpy(device_info.id, id, sizeof(device_info.id));
+    printf("device_info.id: \n");
+    dumpData(device_info.id, 4);
 
     uint8_t pid[2] = {5, 6};
 //    snprintf(ter_info.pid, sizeof(ter_info.pid), "%s", pid);
-    memcpy(ter_info.pid, pid, sizeof(ter_info.pid));
-    printf("ter_info.pid: \n");
-    dumpData(ter_info.pid, 2);
+    memcpy(device_info.pid, pid, sizeof(device_info.pid));
+    printf("device_info.pid: \n");
+    dumpData(device_info.pid, 2);
 
     uint8_t vid[2] = {7, 8};
 //    snprintf(ter_info.vid, sizeof(ter_info.vid), "%s", vid);
-    memcpy(ter_info.vid, vid, sizeof(ter_info.vid));
-    printf("ter_info.vid: \n");
-    dumpData(ter_info.vid, 2);
+    memcpy(device_info.vid, vid, sizeof(device_info.vid));
+    printf("device_info.vid: \n");
+    dumpData(device_info.vid, 2);
 
     uint8_t mac[8] = {11, 22, 33, 44, 55, 66, 77, 88};
 //    snprintf(ter_info.mac, sizeof(ter_info.mac), "%s", mac);
-    memcpy(ter_info.mac, mac, sizeof(ter_info.mac));
-    printf("ter_info.mac: \n");
-    dumpData(ter_info.mac, 8);
+    memcpy(device_info.mac, mac, sizeof(device_info.mac));
+    printf("device_info.mac: \n");
+    dumpData(device_info.mac, 8);
 
 //    int insert_ret =  insert_item_to_list((void *)&ter_info);
-    add_device((void *)&ter_info);
+    addDevice((void *)&device_info);
 
+    uint8_t label[64] = {0};
+    snprintf(label, sizeof(label), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             device_info.id[0],
+             device_info.id[1],
+             device_info.id[2],
+             device_info.id[3],
+             device_info.pid[0],
+             device_info.pid[1],
+             device_info.vid[0],
+             device_info.vid[1]);
+    TerminalInfo *device =  selectDevice(label);
+    freeStructure(device);
 
 
     while (getchar() != 'q') {
