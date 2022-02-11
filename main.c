@@ -18,6 +18,7 @@
 
 #include "serial_control.h"
 #include "device_manager.h"
+#include "package_control.h"
 
 static int g_fd = -1;
 
@@ -59,7 +60,7 @@ void *recvDataThread(void *arg)
 
     fd_set recv_fd;
 //    struct timeval tv = {5, 0};
-    char buff[512] = {0};
+    char buff[1024] = {0};
     int recv_len = 0;
     int buff_len = sizeof(buff);
 
@@ -78,6 +79,7 @@ void *recvDataThread(void *arg)
                     dumpData(buff, recv_len);
                     char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
                     int bytes = writeData(g_fd, send_buff, 7);
+                    deserialize_uart_package(buff);
                 } else {
                     // printf("funcname:%s line:%d recv_len: %d\n",  __func__, __LINE__, recv_len);
                 }
@@ -119,7 +121,7 @@ int main(int argc, char **argv)
         printf("Serial port with file descriptor %d i already lockec by another process\n", fd);
     }
 #endif
-    int bytes = writeData(fd, send_buff, 7);
+//    int bytes = writeData(fd, send_buff, 7);
 
     pthread_t tid;
     // int ret = pthread_create(&tid, NULL, recvDataThread, &fd);
@@ -132,6 +134,8 @@ int main(int argc, char **argv)
 
 #endif
 
+
+#if 1
     TerminalInfo device_info = {0};
     uint8_t id[4] = {1, 2, 3, 4};
 //    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
@@ -170,9 +174,11 @@ int main(int argc, char **argv)
              device_info.pid[1],
              device_info.vid[0],
              device_info.vid[1]);
-    TerminalInfo *device =  selectDevice(label);
-    freeStructure(device);
 
+
+    TerminalInfo select_device = {0};
+    selectDevice(label, (void *)&select_device);
+#endif
 
     while (getchar() != 'q') {
         usleep(10000);

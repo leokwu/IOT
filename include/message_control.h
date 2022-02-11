@@ -9,10 +9,10 @@ extern "C" {
 #endif
 #include "common.h"
 
-void parse_online_offline(const struct *MessagePackage);
-void parse_data_upload(const struct *MessagePackage);
-void parse_power_consumption(const struct *MessagePackage);
-void parse_soft_label(const struct *MessagePackage);
+void parse_online_offline(const void *data);
+void parse_data_upload(const void *data);
+void parse_power_consumption(const void *data);
+void parse_soft_label(const void *data);
 
 
 

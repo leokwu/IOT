@@ -20,6 +20,7 @@ typedef struct PayloadPackage {
     uint8_t pid[2];
     uint8_t vid[2];
     long long int ts;
+    uint8_t mcount;
     uint8_t  message[];
 } PayloadPackage;
 
@@ -58,6 +59,7 @@ enum device_error {
     DEVICE_READ_FAIL =4,
     DEVICE_EXIST = 5,
     DEVICE_LIST_NOT_EXIST = 6,
+    DEVICE_DB_FILE_NOT_EXIST = 7,
     DEVICE_UNKNOW_COMMOND,
 
 };

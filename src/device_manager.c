@@ -259,14 +259,14 @@ static int insertDevice(void *data)
 }
 
 
-static TerminalInfo *convertToStructure(void *data)
+static int convertToStructure(void *label, void *data)
 {
     cJSON *root = readJsonFile(DEVICE_LIST_FILE);
     printfJson(root);
 
     cJSON *device_list = cJSON_GetObjectItem(root, "device_list");
     if (NULL != device_list) {
-        cJSON *item_name = cJSON_GetObjectItem(device_list, data);
+        cJSON *item_name = cJSON_GetObjectItem(device_list, label);
         if (NULL != item_name) {
             //TODO:
             cJSON *device_id = cJSON_GetObjectItem(item_name, "device_id");
@@ -274,7 +274,7 @@ static TerminalInfo *convertToStructure(void *data)
             cJSON *device_vid = cJSON_GetObjectItem(item_name, "device_vid");
             cJSON *device_mac = cJSON_GetObjectItem(item_name, "device_mac");
 
-            TerminalInfo *device_info = (TerminalInfo *)malloc(sizeof(TerminalInfo));
+            TerminalInfo *device_info = (TerminalInfo *)data;
             memcpy(device_info->id, device_id->valuestring, sizeof(device_info->id));
             dumpData_leok(device_info->id, sizeof(device_info->id));
             memcpy(device_info->pid, device_pid->valuestring, sizeof(device_info->pid));
@@ -289,16 +289,16 @@ static TerminalInfo *convertToStructure(void *data)
             device_info->vid = device_vid->valuestring;
             device_info->mac = device_mac->valuestring;
              */
-            return device_info;
+            return DEVICE_OK;
 
         } else {
             printf("convertToComment device node not exist\n");
-            return NULL;
+            return DEVICE_EXIST;
         }
 
     } else {
         printf("convertToComment device_list node not exist\n");
-        return NULL;
+        return DEVICE_LIST_NOT_EXIST;
     }
 }
 
@@ -328,19 +328,20 @@ int addDevice(void *data)
     return ret;
 }
 
-TerminalInfo * selectDevice(void *data)
+int selectDevice(void *label, void *data)
 {
     // TODO:
+    int ret = 0;
 
-    if (data == NULL) {
+    if ( NULL == label || NULL == data) {
         printf("select_device input data null\n");
-        return NULL;
+        return DEVICE_PTR_NULL;
     }
 
     if ((access(DEVICE_LIST_FILE, F_OK)) != -1) { //file exist
-        return convertToStructure(data);
+        ret = convertToStructure(label, data);
     } else {// not exist
-        return NULL;
+        return DEVICE_DB_FILE_NOT_EXIST;
     }
 
 }

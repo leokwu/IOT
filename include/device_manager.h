@@ -11,8 +11,7 @@ extern "C" {
 #include <common.h>
 
 int addDevice(void *data);
-TerminalInfo *selectDevice(void *data);
-void freeStructure(TerminalInfo *device_info);
+int selectDevice(void *label, void *data);
 
 #ifdef __cplusplus
 }
