@@ -94,7 +94,7 @@ void *recvDataThread(void *arg)
 int main(int argc, char **argv)
 {
 
-#if 0
+#if 1
     int fd;
     char *dev ="/dev/ttyUSB0";
     char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 #endif
 
 
-#if 1
+#if 0
     TerminalInfo device_info = {0};
     uint8_t id[4] = {1, 2, 3, 4};
 //    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
@@ -178,6 +178,11 @@ int main(int argc, char **argv)
 
     TerminalInfo select_device = {0};
     selectDevice(label, (void *)&select_device);
+    printf("select device after: ");
+    dumpData(select_device.id, sizeof(select_device.id));
+    dumpData(select_device.pid, sizeof(select_device.pid));
+    dumpData(select_device.vid, sizeof(select_device.vid));
+    dumpData(select_device.mac, sizeof(select_device.mac));
 #endif
 
     while (getchar() != 'q') {

@@ -19,7 +19,7 @@ typedef struct PayloadPackage {
     uint8_t id[4];
     uint8_t pid[2];
     uint8_t vid[2];
-    long long int ts;
+    uint8_t ts[8];
     uint8_t mcount;
     uint8_t  message[];
 } PayloadPackage;

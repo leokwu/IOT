@@ -343,7 +343,8 @@ int selectDevice(void *label, void *data)
     } else {// not exist
         return DEVICE_DB_FILE_NOT_EXIST;
     }
-
+    
+    return ret;
 }
 
 
