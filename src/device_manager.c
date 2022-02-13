@@ -154,7 +154,7 @@ static void writeJsonFile(char *fileName, cJSON *json) {
 static int firstAddDevice(void *data)
 {
 
-    TerminalInfo *device_info = (TerminalInfo *)data;
+    DeviceInfo *device_info = (DeviceInfo *)data;
 
     cJSON *root = cJSON_CreateObject();
     cJSON *device_list = cJSON_CreateObject();
@@ -206,7 +206,7 @@ static int insertDevice(void *data)
     //TODO:
     cJSON *root = readJsonFile(DEVICE_LIST_FILE);
 
-    TerminalInfo *device_info = (TerminalInfo *)data;
+    DeviceInfo *device_info = (DeviceInfo *)data;
     uint8_t label[64] = {0};
     snprintf(label, sizeof(label), "%02x%02x%02x%02x%02x%02x%02x%02x",
              device_info->id[0],
@@ -274,7 +274,7 @@ static int convertToStructure(void *label, void *data)
             cJSON *device_vid = cJSON_GetObjectItem(item_name, "device_vid");
             cJSON *device_mac = cJSON_GetObjectItem(item_name, "device_mac");
 
-            TerminalInfo *device_info = (TerminalInfo *)data;
+            DeviceInfo *device_info = (DeviceInfo *)data;
             memcpy(device_info->id, device_id->valuestring, sizeof(device_info->id));
             dumpData_leok(device_info->id, sizeof(device_info->id));
             memcpy(device_info->pid, device_pid->valuestring, sizeof(device_info->pid));
@@ -302,7 +302,7 @@ static int convertToStructure(void *label, void *data)
     }
 }
 
-void freeStructure(TerminalInfo *device_info)
+void freeStructure(DeviceInfo *device_info)
 {
     if (device_info != NULL) {
         free(device_info);
@@ -343,7 +343,7 @@ int selectDevice(void *label, void *data)
     } else {// not exist
         return DEVICE_DB_FILE_NOT_EXIST;
     }
-    
+
     return ret;
 }
 

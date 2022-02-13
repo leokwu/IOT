@@ -32,20 +32,27 @@ typedef struct MessagePackage {
 } MessagePackage;
 
 
-enum message_key {
-    INVALID_MESSAGE = 0,
+enum device_message_key {
+    DEVICE_INVALID_MESSAGE = 0,
 
-    TERMINAL_ONLINE_OFFLINE = 0x00000001,
-    TERMINAL_DATA_UPLOAD = 0x00000002,
-    TERMINAL_POWER_CONSUMPTION = 0x00000003,
-    TERMINAL_SOFT_LABEL = 0x00000004,
-
-    TERMINAL_SWITCH_CONTROL = 0x00000005,
+    DEVICE_ONLINE_OFFLINE = 0x00000001,
+    DEVICE_DATA_UPLOAD = 0x00000002,
+    DEVICE_POWER_CONSUMPTION = 0x00000003,
+    DEVICE_SOFT_LABEL = 0x00000004,
 
 };
 
+enum cloud_message_key {
+    CLOUD_INVALID_MESSAGE = 0,
+
+    CLOUD_SWITCH_CONTROL = 0x00000001,
+
+};
+
+
 enum package_error {
     PACKAGE_OK = 0,
+    PACKAGE_PTR_NULL = 1,
     PACKAGE_UNKNOW_MESSAGE,
 
 };
@@ -65,12 +72,12 @@ enum device_error {
 };
 
 
-typedef struct TerminalInfo {
+typedef struct DeviceInfo {
     uint8_t id[4];
     uint8_t pid[2];
     uint8_t vid[2];
     uint8_t  mac[8];
-} TerminalInfo;
+} DeviceInfo;
 
 #ifdef __cplusplus
 }

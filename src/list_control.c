@@ -62,14 +62,14 @@ int init_table_list()
         return 1;
     }
 
-//    const char *sql = "CREATE TABLE IF NOT EXISTS TerminalInfo( \
+//    const char *sql = "CREATE TABLE IF NOT EXISTS DeviceInfo( \
 //        terminal_label CHAR(16) PRIMARY KEY,  \
 //        terminal_id CHAR(8),  \
 //        terminal_pid CHAR(4),  \
 //        terminal_vid CHAR(4),  \
 //        terminal_mac CHAR(16));";
 
-    const char *sql = "CREATE TABLE IF NOT EXISTS TerminalInfo( \
+    const char *sql = "CREATE TABLE IF NOT EXISTS DeviceInfo( \
         terminal_label VARCHAR(16) PRIMARY KEY,  \
         terminal_id VARCHAR(8),  \
         terminal_pid VARCHAR(4),  \
@@ -125,7 +125,7 @@ int dump_list()
         return 1;
     }
 
-    char *sql = "SELECT * FROM TerminalInfo;";
+    char *sql = "SELECT * FROM DeviceInfo;";
     if (sqlite3_exec(db, sql, callback, 0, &err_msg) != SQLITE_OK ) {
         fprintf(stderr, "Failed to select data\n");
         fprintf(stderr, "SQL error: %s\n", err_msg);
@@ -161,7 +161,7 @@ int insert_item_to_list(void *data)
         return 1;
     }
 
-    TerminalInfo *tm_info = (TerminalInfo *)data;
+    DeviceInfo *tm_info = (DeviceInfo *)data;
     uint8_t terminal_label[17] = {0};
     snprintf(terminal_label, sizeof(terminal_label), "%02x%02x%02x%02x%02x%02x%02x%02x",
              tm_info->id[0],
@@ -211,7 +211,7 @@ int insert_item_to_list(void *data)
     dumpData_leok(mac, 17);
 
     char sql[512] = {0};
-    snprintf(sql, sizeof(sql), "INSERT INTO TerminalInfo VALUES('%s', '%s', '%s', '%s', '%s');",
+    snprintf(sql, sizeof(sql), "INSERT INTO DeviceInfo VALUES('%s', '%s', '%s', '%s', '%s');",
              terminal_label,
              id,
              pid,

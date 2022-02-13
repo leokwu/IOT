@@ -21,6 +21,9 @@
 *@return  void
 */
 
+
+static int g_fd = -1;
+
 void setBaudRate(int fd, int speed)
 {
     int i;
@@ -143,6 +146,7 @@ int openDevice(char *Dev)
         printf("openDevice Can't Open Serial Port :%s\n", Dev);
         return -1;
     } else {
+        g_fd = fd;
         return fd;
     }
 }
@@ -207,4 +211,10 @@ int readData(int fd, char *buf, int len)
     }
 //    printf("readData bytes: %d\n", bytes);
     return bytes;
+}
+
+
+int getFd()
+{
+    return g_fd;
 }

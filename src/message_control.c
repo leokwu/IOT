@@ -8,6 +8,23 @@
 
 #include "message_control.h"
 #include "device_manager.h"
+#include "serial_control.h"
+
+
+typedef struct SwitchPackage {
+    uint8_t head[6];
+    uint16_t total;
+    uint8_t id[4];
+    uint8_t pid[2];
+    uint8_t vid[2];
+    uint8_t ts[8];
+    uint8_t mcount;
+    uint32_t key;
+    uint8_t vlength;
+    uint8_t  value;
+} SwitchPackage;
+
+
 
 
 static void dumpData_leok(const unsigned char *buf, size_t length) {
@@ -43,7 +60,7 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
 
 
 
-void parse_online_offline(const void *data)
+void parse_device_online_offline(const void *data)
 {
     PayloadPackage* payload = (PayloadPackage*) data;
     MessagePackage *msg_pkg = (MessagePackage *)payload->message;
@@ -54,7 +71,7 @@ void parse_online_offline(const void *data)
     printf("%s, key: %d vlength: %d value: %d\n", __func__ , key, vlength, value);
 }
 
-void parse_data_upload(const void *data)
+void parse_device_data_upload(const void *data)
 {
     PayloadPackage* payload = (PayloadPackage*) data;
     MessagePackage *msg_pkg = (MessagePackage *)payload->message;
@@ -67,7 +84,7 @@ void parse_data_upload(const void *data)
     printf("%s, key: %d vlength: %d voltage: %d V, current: %d mA\n", __func__ , key, vlength, voltage, current);
 }
 
-void parse_power_consumption(const void *data)
+void parse_device_power_consumption(const void *data)
 {
     PayloadPackage* payload = (PayloadPackage*) data;
     MessagePackage *msg_pkg = (MessagePackage *)payload->message;
@@ -79,7 +96,7 @@ void parse_power_consumption(const void *data)
 }
 
 
-void parse_soft_label(const void *data)
+void parse_device_soft_label(const void *data)
 {
     PayloadPackage* payload = (PayloadPackage*) data;
     MessagePackage *msg_pkg = (MessagePackage *)payload->message;
@@ -90,7 +107,7 @@ void parse_soft_label(const void *data)
     memcpy(mac, msg_pkg->value, 8);
     dumpData_leok(mac, sizeof(mac));
 
-    TerminalInfo device_info = {0};
+    DeviceInfo device_info = {0};
     memcpy(device_info.id, payload->id, sizeof(device_info.id));
     memcpy(device_info.pid, payload->pid, sizeof(device_info.pid));
     memcpy(device_info.vid, payload->vid, sizeof(device_info.vid));
@@ -98,4 +115,34 @@ void parse_soft_label(const void *data)
     addDevice((void *)&device_info);
 
     printf("%s, key: %d vlength: %d mac: %s\n", __func__ , key, vlength, mac);
+}
+
+void parse_cloud_switch(const void *data)
+{
+    SwitchPackage switch_package = {0};
+
+    switch_package.head[0] = 0xFC;
+    switch_package.head[1] = 0x1D;
+    switch_package.head[2] = 0x03;
+    switch_package.head[3] = 0x01;
+    switch_package.head[4] = 0x05;
+    switch_package.head[5] = 0xED;
+
+    DeviceInfo select_device = {0};
+    selectDevice("de12cd9600010001", (void *)&select_device);
+    switch_package.total = 25;
+    memcpy(switch_package.id, select_device.id, sizeof(switch_package.id));
+    memcpy(switch_package.pid, select_device.pid, sizeof(switch_package.pid));
+    memcpy(switch_package.vid, select_device.vid, sizeof(switch_package.vid));
+    memcpy(switch_package.id, select_device.id, sizeof(switch_package.id));
+    switch_package.mcount = 1;
+    switch_package.key = CLOUD_SWITCH_CONTROL;
+    switch_package.vlength = 1;
+    switch_package.value = 2;
+
+
+    dumpData_leok((const unsigned char *)&switch_package, sizeof(switch_package));
+//    int bytes = writeData(getFd(), (const char *)&switch_package, sizeof(switch_package));
+//    printf("writeData bytes: %d\n", bytes);
+
 }

@@ -9,8 +9,10 @@ extern "C" {
 #endif
 #include "common.h"
 
-int32_t deserialize_message(const void *data);
+//int32_t deserialize_device_message(const void *data);
 int32_t deserialize_uart_package(const void *data);
+
+int32_t deserialize_cloud_package(const void *data);
 
 #ifdef __cplusplus
 }

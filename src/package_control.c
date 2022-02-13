@@ -38,25 +38,25 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
     printf("\n");
 }
 
-
-typedef void (*parse_message_func)(const void *data);
-struct parse_message_map {
-    enum message_key msg_key;
-    parse_message_func parse_message;
+// device-----------------------------------------------------------
+typedef void (*parse_device_message_func)(const void *data);
+struct parse_device_message_map {
+    enum device_message_key msg_key;
+    parse_device_message_func parse_message;
 };
 
-int32_t deserialize_message(const void *data)
+int32_t deserialize_device_message(const void *data)
 {
-    const struct parse_message_map map[] = { { TERMINAL_ONLINE_OFFLINE, parse_online_offline },
-                                             { TERMINAL_DATA_UPLOAD, parse_data_upload },
-                                             { TERMINAL_POWER_CONSUMPTION, parse_power_consumption },
-                                             { TERMINAL_SOFT_LABEL, parse_soft_label } };
+    const struct parse_device_message_map map[] = { { DEVICE_ONLINE_OFFLINE, parse_device_online_offline },
+                                             { DEVICE_DATA_UPLOAD, parse_device_data_upload },
+                                             { DEVICE_POWER_CONSUMPTION, parse_device_power_consumption },
+                                             { DEVICE_SOFT_LABEL, parse_device_soft_label } };
 
 
     PayloadPackage* payload = (PayloadPackage*) data;
     MessagePackage *msg_pkg = (MessagePackage *)payload->message;
 
-    for (uint32_t i = 0; i < sizeof(map) / sizeof(struct parse_message_map); i++) {
+    for (uint32_t i = 0; i < sizeof(map) / sizeof(struct parse_device_message_map); i++) {
         if (map[i].msg_key != htobe32(msg_pkg->key)) {
             continue;
         }
@@ -70,9 +70,14 @@ int32_t deserialize_message(const void *data)
 
 int32_t deserialize_uart_package(const void *data)
 {
-//    auto payload = (PayloadPackage*) data;
+
+    if (NULL == data) {
+        printf("deserialize_uart_package data null\n");
+        return PACKAGE_PTR_NULL;
+    }
+    //    auto payload = (PayloadPackage*) data;
     PayloadPackage* payload = (PayloadPackage*) data;
-#if 1
+#if 1 // FOR DEBUG
     uint16_t total = htobe16(payload->total);
     uint8_t id[4] = {0};
     memcpy(id, payload->id, 4);
@@ -88,7 +93,48 @@ int32_t deserialize_uart_package(const void *data)
 //    MessagePackage *message = (MessagePackage *)payload->message;
 //    int32_t ret = deserialize_message(message);
 #endif
-    int32_t ret = deserialize_message(data);
+    int32_t ret = deserialize_device_message(data);
     printf("%s ret: %d\n", __func__, ret);
     return ret;
 }
+// device-----------------------------------------------------------
+
+
+// cloud------------------------------------------------------------
+typedef void (*parse_cloud_message_func)(const void *data);
+struct parse_cloud_message_map {
+    enum cloud_message_key msg_key;
+    parse_cloud_message_func parse_message;
+};
+
+
+int32_t deserialize_cloud_message(const void *data)
+{
+    const struct parse_cloud_message_map map[] = { { CLOUD_SWITCH_CONTROL, parse_cloud_switch } };
+
+    for (uint32_t i = 0; i < sizeof(map) / sizeof(struct parse_cloud_message_map); i++) {
+        if (map[i].msg_key != CLOUD_SWITCH_CONTROL) {
+            continue;
+        }
+        printf("support parse 0x%08x message\n", CLOUD_SWITCH_CONTROL);
+        map[i].parse_message(data);
+        return PACKAGE_OK;
+    }
+    printf("Unsupport parse 0x%08x message\n", CLOUD_SWITCH_CONTROL);
+    return PACKAGE_UNKNOW_MESSAGE;
+}
+
+
+int32_t deserialize_cloud_package(const void *data)
+{
+    if (NULL == data) {
+        printf("deserialize_cloud_package data null\n");
+        return PACKAGE_PTR_NULL;
+    }
+
+    int32_t ret = 0;
+    ret = deserialize_cloud_message(data);
+    return ret;
+}
+
+// cloud------------------------------------------------------------

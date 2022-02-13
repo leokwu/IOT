@@ -78,8 +78,9 @@ void *recvDataThread(void *arg)
                 if (recv_len > 0) {
                     dumpData(buff, recv_len);
                     char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
-                    int bytes = writeData(g_fd, send_buff, 7);
+//                    int bytes = writeData(g_fd, send_buff, 7);
                     deserialize_uart_package(buff);
+                    deserialize_cloud_package("leok");
                 } else {
                     // printf("funcname:%s line:%d recv_len: %d\n",  __func__, __LINE__, recv_len);
                 }
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
 
 
 #if 0
-    TerminalInfo device_info = {0};
+    DeviceInfo device_info = {0};
     uint8_t id[4] = {1, 2, 3, 4};
 //    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
     memcpy(device_info.id, id, sizeof(device_info.id));
@@ -176,7 +177,7 @@ int main(int argc, char **argv)
              device_info.vid[1]);
 
 
-    TerminalInfo select_device = {0};
+    DeviceInfo select_device = {0};
     selectDevice(label, (void *)&select_device);
     printf("select device after: ");
     dumpData(select_device.id, sizeof(select_device.id));

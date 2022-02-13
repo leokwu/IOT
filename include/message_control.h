@@ -9,12 +9,14 @@ extern "C" {
 #endif
 #include "common.h"
 
-void parse_online_offline(const void *data);
-void parse_data_upload(const void *data);
-void parse_power_consumption(const void *data);
-void parse_soft_label(const void *data);
+// device
+void parse_device_online_offline(const void *data);
+void parse_device_data_upload(const void *data);
+void parse_device_power_consumption(const void *data);
+void parse_device_soft_label(const void *data);
 
-
+// cloud
+void parse_cloud_switch(const void *data);
 
 #ifdef __cplusplus
 }

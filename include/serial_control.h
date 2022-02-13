@@ -14,7 +14,7 @@ int openDevice(char *Dev);
 void closeDevice(int fd);
 int writeData(int fd, const char *buf, int len);
 int readData(int fd, char *buf, int len);
-
+int getFd();
 
 #ifdef __cplusplus
 }
