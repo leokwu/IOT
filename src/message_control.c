@@ -7,6 +7,7 @@
 #include <endian.h>
 
 #include "message_control.h"
+#include "device_manager.h"
 
 
 static void dumpData_leok(const unsigned char *buf, size_t length) {
@@ -88,5 +89,13 @@ void parse_soft_label(const void *data)
     uint8_t mac[8] = {0};
     memcpy(mac, msg_pkg->value, 8);
     dumpData_leok(mac, sizeof(mac));
+
+    TerminalInfo device_info = {0};
+    memcpy(device_info.id, payload->id, sizeof(device_info.id));
+    memcpy(device_info.pid, payload->pid, sizeof(device_info.pid));
+    memcpy(device_info.vid, payload->vid, sizeof(device_info.vid));
+    memcpy(device_info.mac, mac, sizeof(device_info.mac));
+    addDevice((void *)&device_info);
+
     printf("%s, key: %d vlength: %d mac: %s\n", __func__ , key, vlength, mac);
 }
