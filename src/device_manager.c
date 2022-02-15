@@ -48,6 +48,108 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
 }
 
 
+const char * base64char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char padding_char = '=';
+int base64encode(const uint8_t *sourcedata, size_t srclen, char *base64) {
+    int i=0, j=0;
+    unsigned char trans_index=0;
+    const int datalength = srclen;
+    for (; i < datalength; i += 3){
+        trans_index = ((sourcedata[i] >> 2) & 0x3f);
+        base64[j++] = base64char[(int)trans_index];
+        trans_index = ((sourcedata[i] << 4) & 0x30);
+        if (i + 1 < datalength){
+            trans_index |= ((sourcedata[i + 1] >> 4) & 0x0f);
+            base64[j++] = base64char[(int)trans_index];
+        }else{
+            base64[j++] = base64char[(int)trans_index];
+            base64[j++] = padding_char;
+            base64[j++] = padding_char;
+            break;
+        }
+        trans_index = ((sourcedata[i + 1] << 2) & 0x3c);
+        if (i + 2 < datalength){
+            trans_index |= ((sourcedata[i + 2] >> 6) & 0x03);
+            base64[j++] = base64char[(int)trans_index];
+            trans_index = sourcedata[i + 2] & 0x3f;
+            base64[j++] = base64char[(int)trans_index];
+        }
+        else{
+            base64[j++] = base64char[(int)trans_index];
+            base64[j++] = padding_char;
+            break;
+        }
+    }
+    base64[j] = '\0';
+    return j;
+}
+
+static const unsigned char pr2six[256] = {
+        /* ASCII table */
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
+        64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+        64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+};
+
+
+long base64decode(uint8_t *bufplain, const uint8_t *bufcoded) {
+    long nbytesdecoded;
+    const unsigned char *bufin;
+    unsigned char *bufout;
+    long nprbytes;
+
+    bufin = (const unsigned char *) bufcoded;
+    while (pr2six[*(bufin++)] <= 63);
+    nprbytes = (bufin - (const unsigned char *) bufcoded) - 1;
+    nbytesdecoded = ((nprbytes + 3) / 4) * 3;
+
+    bufout = (unsigned char *) bufplain;
+    bufin = (const unsigned char *) bufcoded;
+
+    while (nprbytes > 4) {
+        *(bufout++) =
+                (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+        *(bufout++) =
+                (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+        *(bufout++) =
+                (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+        bufin += 4;
+        nprbytes -= 4;
+    }
+
+    /* Note: (nprbytes == 1) would be an error, so just ingore that case */
+    if (nprbytes > 1) {
+        *(bufout++) =
+                (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+    }
+    if (nprbytes > 2) {
+        *(bufout++) =
+                (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+    }
+    if (nprbytes > 3) {
+        *(bufout++) =
+                (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+    }
+
+    *(bufout++) = '\0';
+    nbytesdecoded -= (4 - nprbytes) & 3;
+    return nbytesdecoded;
+}
+
+
 static void printJsonObjvalue(const cJSON *json) {
     if (NULL == json) {
         printf("NULL object!\n");
@@ -161,21 +263,22 @@ static int firstAddDevice(void *data)
     cJSON *item = cJSON_CreateObject();
 
 
-    uint8_t transit[16] = {0};
-    memset(transit, 0, 16);
-    memcpy(transit, device_info->id, sizeof(device_info->id));
+    char transit[1024] = {0};
+    memset(transit, 0, sizeof(transit));
+    base64encode(device_info->id, sizeof(device_info->id), transit);
     cJSON_AddStringToObject(item, "device_id", transit);
 
-    memset(transit, 0, 16);
-    memcpy(transit, device_info->pid, sizeof(device_info->pid));
+    memset(transit, 0, sizeof(transit));
+    base64encode(device_info->pid, sizeof(device_info->pid), transit);
     cJSON_AddStringToObject(item, "device_pid", transit);
 
-    memset(transit, 0, 16);
-    memcpy(transit, device_info->vid, sizeof(device_info->vid));
+    memset(transit, 0, sizeof(transit));
+    base64encode(device_info->vid, sizeof(device_info->vid), transit);
     cJSON_AddStringToObject(item, "device_vid", transit);
 
-    memset(transit, 0, 16);
-    memcpy(transit, device_info->mac, sizeof(device_info->mac));
+
+    memset(transit, 0, sizeof(transit));
+    base64encode(device_info->mac, sizeof(device_info->mac), transit);
     cJSON_AddStringToObject(item, "device_mac", transit);
 
     uint8_t label[64] = {0};
@@ -228,21 +331,21 @@ static int insertDevice(void *data)
             printf("device not exist && insert\n");
             cJSON *item = cJSON_CreateObject();
 
-            uint8_t transit[16] = {0};
-            memset(transit, 0, 16);
-            memcpy(transit, device_info->id, sizeof(device_info->id));
+            char transit[1024] = {0};
+            memset(transit, 0, sizeof(transit));
+            base64encode(device_info->id, sizeof(device_info->id), transit);
             cJSON_AddStringToObject(item, "device_id", transit);
 
-            memset(transit, 0, 16);
-            memcpy(transit, device_info->pid, sizeof(device_info->pid));
+            memset(transit, 0, sizeof(transit));
+            base64encode(device_info->pid, sizeof(device_info->pid), transit);
             cJSON_AddStringToObject(item, "device_pid", transit);
 
-            memset(transit, 0, 16);
-            memcpy(transit, device_info->vid, sizeof(device_info->vid));
+            memset(transit, 0, sizeof(transit));
+            base64encode(device_info->vid, sizeof(device_info->vid), transit);
             cJSON_AddStringToObject(item, "device_vid", transit);
 
-            memset(transit, 0, 16);
-            memcpy(transit, device_info->mac, sizeof(device_info->mac));
+            memset(transit, 0, sizeof(transit));
+            base64encode(device_info->mac, sizeof(device_info->mac), transit);
             cJSON_AddStringToObject(item, "device_mac", transit);
 
             cJSON_AddItemToObject(device_list, label, item);
@@ -275,13 +378,25 @@ static int convertToStructure(void *label, void *data)
             cJSON *device_mac = cJSON_GetObjectItem(item_name, "device_mac");
 
             DeviceInfo *device_info = (DeviceInfo *)data;
-            memcpy(device_info->id, device_id->valuestring, sizeof(device_info->id));
+            uint8_t transit[1024] = {0};
+            memset(transit, 0, sizeof(transit));
+            base64decode(transit, device_id->valuestring);
+            memcpy(device_info->id, transit, sizeof(device_info->id));
             dumpData_leok(device_info->id, sizeof(device_info->id));
-            memcpy(device_info->pid, device_pid->valuestring, sizeof(device_info->pid));
+
+            memset(transit, 0, sizeof(transit));
+            base64decode(transit, device_pid->valuestring);
+            memcpy(device_info->pid, transit, sizeof(device_info->pid));
             dumpData_leok(device_info->pid, sizeof(device_info->pid));
-            memcpy(device_info->vid, device_vid->valuestring, sizeof(device_info->vid));
+
+            memset(transit, 0, sizeof(transit));
+            base64decode(transit, device_vid->valuestring);
+            memcpy(device_info->vid, transit, sizeof(device_info->vid));
             dumpData_leok(device_info->vid, sizeof(device_info->vid));
-            memcpy(device_info->mac, device_mac->valuestring, sizeof(device_info->mac));
+
+            memset(transit, 0, sizeof(transit));
+            base64decode(transit, device_mac->valuestring);
+            memcpy(device_info->mac, transit, sizeof(device_info->mac));
             dumpData_leok(device_info->mac, sizeof(device_info->mac));
             /*
             device_info->id = device_id->valuestring;

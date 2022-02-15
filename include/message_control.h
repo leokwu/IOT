@@ -18,6 +18,10 @@ void parse_device_soft_label(const void *data);
 // cloud
 void parse_cloud_switch(const void *data);
 
+// zigbee networking
+void parse_short_addr(const void *data);
+void get_short_addr(const void* data);
+
 #ifdef __cplusplus
 }
 #endif

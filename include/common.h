@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-
+#pragma pack(1)
 typedef struct PayloadPackage {
     uint16_t total;
     uint8_t id[4];
@@ -24,7 +24,7 @@ typedef struct PayloadPackage {
     uint8_t  message[];
 } PayloadPackage;
 
-
+#pragma pack(1)
 typedef struct MessagePackage {
     uint32_t key;
     uint8_t vlength;
@@ -71,7 +71,7 @@ enum device_error {
 
 };
 
-
+#pragma pack(1)
 typedef struct DeviceInfo {
     uint8_t id[4];
     uint8_t pid[2];

@@ -76,11 +76,29 @@ void *recvDataThread(void *arg)
             } else {
                 recv_len = readData(g_fd, buff, buff_len);
                 if (recv_len > 0) {
+                    printf("recv_len :%d\n", recv_len);
                     dumpData(buff, recv_len);
-                    char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
-//                    int bytes = writeData(g_fd, send_buff, 7);
-                    deserialize_uart_package(buff);
-                    deserialize_cloud_package("leok");
+//                    char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
+                    int head = (int)(buff[0] & 0xFF);
+                    printf("head: %02x\n", head);
+                    if (head == 0xFB && recv_len == 3) {
+                        printf("short addr\n");
+                        deserialize_networking_package(buff);
+                        deserialize_cloud_package("leok");
+//                        exit(1);
+//                        sleep(60);
+//                        char send_buff[9] = {0xFC, 0x07, 0x03, 0x01, 0x45, 0xF0, 0x31, 0x32, 0x33};
+//                        int bytes = writeData(g_fd, send_buff, sizeof(send_buff));
+//                        printf("bytes: %d\n", bytes);
+                    } else {
+                        deserialize_uart_package(buff);
+//                        deserialize_cloud_package("leok");
+                    }
+//                    char send_buff[12] = {0xFE, 0x09, 0x10, 0x36, 0x61, 0x6E, 0x24, 0x00, 0x4B, 0x12, 0x00, 0xFF};
+//                    int bytes = writeData(g_fd, send_buff, sizeof(send_buff));
+//                    deserialize_uart_package(buff);
+//                    deserialize_cloud_package("leok");
+
                 } else {
                     // printf("funcname:%s line:%d recv_len: %d\n",  __func__, __LINE__, recv_len);
                 }
@@ -98,7 +116,6 @@ int main(int argc, char **argv)
 #if 1
     int fd;
     char *dev ="/dev/ttyUSB0";
-    char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
 
     fd = openDevice(dev);
     if (fd > 0)
@@ -122,7 +139,8 @@ int main(int argc, char **argv)
         printf("Serial port with file descriptor %d i already lockec by another process\n", fd);
     }
 #endif
-//    int bytes = writeData(fd, send_buff, 7);
+//    char send_buff[12] = {0xFE, 0x09, 0x10, 0x36, 0x61, 0x6E, 0x24, 0x00, 0x4B, 0x12, 0x00, 0xFF};
+//    int bytes = writeData(g_fd, send_buff, sizeof(send_buff));
 
     pthread_t tid;
     // int ret = pthread_create(&tid, NULL, recvDataThread, &fd);

@@ -173,6 +173,7 @@ void closeDevice(int fd)
 int writeData(int fd, const char *buf, int len)
 {
     if (fd < 0 || buf == NULL || len == 0) {
+        printf("input error\n");
         return -1;
     }
     errno = 0;
