@@ -150,18 +150,18 @@ void get_short_addr(const void* data)
 
     memset(g_short_addr, 0, sizeof(g_short_addr));
     uint8_t mac[8] = {0};
-//    memcpy(mac, data, sizeof(mac));
-    mac[0] = 0x36;
-    mac[1] = 0x61;
-    mac[2] = 0x6E;
-    mac[3] = 0x24;
-    mac[4] = 0x00;
-    mac[5] = 0x4B;
-    mac[6] = 0x12;
-    mac[7] = 0x00;
+    memcpy(mac, data, sizeof(mac));
+//    mac[0] = 0x36;
+//    mac[1] = 0x61;
+//    mac[2] = 0x6E;
+//    mac[3] = 0x24;
+//    mac[4] = 0x00;
+//    mac[5] = 0x4B;
+//    mac[6] = 0x12;
+//    mac[7] = 0x00;
     char send_buff[12] = {0xFE, 0x09, 0x10, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], 0xFF};
-    int bytes = writeData(getFd(), send_buff, sizeof(send_buff));
-    sleep(5);
+    int bytes = serialWrite(send_buff, sizeof(send_buff));
+    sleep(2);
 }
 
 
@@ -173,11 +173,17 @@ void parse_cloud_switch(const void *data)
         return;
     }
 
+    int ret = -1;
+
     uint8_t mac[8] = {0};
     DeviceInfo select_device = {0};
-    selectDevice("de12cd9600010001", (void *)&select_device);
+    ret = selectDevice("de12cd9600010001", (void *)&select_device);
+    if ( DEVICE_OK != ret ) {
+        printf("selectDevice ret: %d\n", ret);
+        return;
+    }
     memcpy(mac, select_device.mac, sizeof(mac));
-//    get_short_addr(mac);
+    get_short_addr(mac);
 
     SwitchPackage switch_package = {0};
 
@@ -202,10 +208,10 @@ void parse_cloud_switch(const void *data)
 //
 //    dumpData_leok((const unsigned char *)&switch_package, sizeof(switch_package));
 //    char send_buff[9] = {0xFC, 0x07, 0x03, 0x01, 0x53, 0x37, 0x31, 0x32, 0x33};
-//    writeData(getFd(), send_buff, sizeof(send_buff));
+//    serialWrite(send_buff, sizeof(send_buff));
 
     printf("sizeof(switch_package): %ld\n", sizeof(switch_package));
-    int bytes = writeData(getFd(), (const char *)&switch_package, sizeof(switch_package));
+    int bytes = serialWrite((const char *)&switch_package, sizeof(switch_package));
     printf("writeData bytes: %d\n", bytes);
 
 }

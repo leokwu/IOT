@@ -14,7 +14,7 @@ int32_t deserialize_uart_package(const void *data);
 
 int32_t deserialize_cloud_package(const void *data);
 
-int32_t deserialize_networking_package(const void *data);
+int32_t deserialize_shotaddr_package(const void *data);
 
 #ifdef __cplusplus
 }

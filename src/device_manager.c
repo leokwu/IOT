@@ -408,7 +408,7 @@ static int convertToStructure(void *label, void *data)
 
         } else {
             printf("convertToComment device node not exist\n");
-            return DEVICE_EXIST;
+            return DEVICE_NOT_EXIST;
         }
 
     } else {

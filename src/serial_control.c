@@ -24,7 +24,7 @@
 
 static int g_fd = -1;
 
-void setBaudRate(int fd, int speed)
+static void setBaudRate(int fd, int speed)
 {
     int i;
     int status;
@@ -57,7 +57,7 @@ void setBaudRate(int fd, int speed)
 *@param  parity  类型  int  效验类型 取值为N,E,O,S     N->无奇偶校验，O->奇校验 E->为偶校验，
 *@return
 */
-int setParity(int fd, int databits, int stopbits, int parity)
+static int setParity(int fd, int databits, int stopbits, int parity)
 {
     struct termios options;
     if ( tcgetattr( fd,&options) != 0) {
@@ -138,7 +138,7 @@ int setParity(int fd, int databits, int stopbits, int parity)
 *@breif 打开串口
 *@return
 */
-int openDevice(char *Dev)
+static int openDevice(char *Dev)
 {
     int fd = open( Dev, O_RDWR);         //| O_NOCTTY | O_NDELAY | O_NONBLOCK
     /*设置数据位数*/
@@ -155,7 +155,7 @@ int openDevice(char *Dev)
 *@breif 关闭串口
 *@return
 */
-void closeDevice(int fd)
+static void closeDevice(int fd)
 {
     if (fd > 0) {
         close(fd);
@@ -170,7 +170,7 @@ void closeDevice(int fd)
 *@param  len 类型  int 需要写的数据长度
 *@return bytes 类型 int 写成功的数据长度
 */
-int writeData(int fd, const char *buf, int len)
+static int writeData(int fd, const char *buf, int len)
 {
     if (fd < 0 || buf == NULL || len == 0) {
         printf("input error\n");
@@ -196,7 +196,7 @@ int writeData(int fd, const char *buf, int len)
 *@param  len 类型  int 需要读的数据长度
 *@return bytes 类型 int 读成功的数据长度
 */
-int readData(int fd, char *buf, int len)
+static int readData(int fd, char *buf, int len)
 {
     if (fd < 0 || buf == NULL || len == 0) {
         return -1;
@@ -215,7 +215,51 @@ int readData(int fd, char *buf, int len)
 }
 
 
-int getFd()
+int serialInit()
+{
+    int fd;
+    char *dev ="/dev/ttyUSB0";
+
+    fd = openDevice(dev);
+    if (fd > 0)
+        setBaudRate(fd, 115200);
+    else {
+        printf("Can't Open Serial Port!\n");
+        return -1;
+    }
+
+    printf("openDevice fd: %d\n", fd);
+    // 8位数据，非两位的停止位，不使用奇偶校验 ，不允许输入奇偶校验
+    if (setParity(fd, 8, 1, 'n') == false) {
+        printf("Set Parity Error\n");
+        return -1;
+    }
+
+#if 0
+    // acquire non-blocking exclusive lock
+    if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
+        printf("Serial port with file descriptor %d i already lockec by another process\n", fd);
+    }
+#endif
+    return fd;
+}
+
+int serialGetFd()
 {
     return g_fd;
+}
+
+int serialRead(char *buf, int len)
+{
+    return readData(g_fd, buf, len);
+}
+
+int serialWrite(const char *buf, int len)
+{
+    return writeData(g_fd, buf, len);
+}
+
+void serialClose()
+{
+    closeDevice(g_fd);
 }

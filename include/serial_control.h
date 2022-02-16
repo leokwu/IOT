@@ -8,13 +8,12 @@
 extern "C" {
 #endif
 
-void setBaudRate(int fd, int speed);
-int setParity(int fd, int databits, int stopbits, int parity);
-int openDevice(char *Dev);
-void closeDevice(int fd);
-int writeData(int fd, const char *buf, int len);
-int readData(int fd, char *buf, int len);
-int getFd();
+
+int serialInit();
+int serialGetFd();
+int serialRead(char *buf, int len);
+int serialWrite(const char *buf, int len);
+void serialClose();
 
 #ifdef __cplusplus
 }

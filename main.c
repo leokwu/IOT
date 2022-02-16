@@ -20,7 +20,7 @@
 #include "device_manager.h"
 #include "package_control.h"
 
-static int g_fd = -1;
+
 
 void dumpData(const unsigned char *buf, size_t length) {
     printf("leok----dump data: ");
@@ -53,7 +53,7 @@ void dumpData(const unsigned char *buf, size_t length) {
     printf("\n");
 }
 
-void *recvDataThread(void *arg)
+void *recvSerialDataThread(void *arg)
 {
     pthread_detach(pthread_self());
     // int fd = *(int*)arg;
@@ -63,6 +63,8 @@ void *recvDataThread(void *arg)
     char buff[1024] = {0};
     int recv_len = 0;
     int buff_len = sizeof(buff);
+    int g_fd = -1;
+    g_fd = serialGetFd();
 
     while(true) {
         struct timeval tv = {1, 0};
@@ -74,30 +76,18 @@ void *recvDataThread(void *arg)
             if(select(g_fd + 1, &recv_fd, NULL, NULL, &tv) < 0) {
                 printf("select error\n");
             } else {
-                recv_len = readData(g_fd, buff, buff_len);
+                recv_len = serialRead(buff, buff_len);
                 if (recv_len > 0) {
                     printf("recv_len :%d\n", recv_len);
                     dumpData(buff, recv_len);
-//                    char send_buff[7] = {0xFC, 0x05, 0x01, 0x02, 0x31, 0x32, 0x33};
                     int head = (int)(buff[0] & 0xFF);
                     printf("head: %02x\n", head);
                     if (head == 0xFB && recv_len == 3) {
                         printf("short addr\n");
-                        deserialize_networking_package(buff);
-                        deserialize_cloud_package("leok");
-//                        exit(1);
-//                        sleep(60);
-//                        char send_buff[9] = {0xFC, 0x07, 0x03, 0x01, 0x45, 0xF0, 0x31, 0x32, 0x33};
-//                        int bytes = writeData(g_fd, send_buff, sizeof(send_buff));
-//                        printf("bytes: %d\n", bytes);
+                        deserialize_shotaddr_package(buff);
                     } else {
                         deserialize_uart_package(buff);
-//                        deserialize_cloud_package("leok");
                     }
-//                    char send_buff[12] = {0xFE, 0x09, 0x10, 0x36, 0x61, 0x6E, 0x24, 0x00, 0x4B, 0x12, 0x00, 0xFF};
-//                    int bytes = writeData(g_fd, send_buff, sizeof(send_buff));
-//                    deserialize_uart_package(buff);
-//                    deserialize_cloud_package("leok");
 
                 } else {
                     // printf("funcname:%s line:%d recv_len: %d\n",  __func__, __LINE__, recv_len);
@@ -107,54 +97,38 @@ void *recvDataThread(void *arg)
     }
 }
 
+
+void *recvCloudDataThread(void *arg)
+{
+    pthread_detach(pthread_self());
+
+    //TODO:
+//    while(1) {
+//
+//    }
+    deserialize_cloud_package("leok");
+}
+
+
+
 /**
 *@breif     main()
 */
 int main(int argc, char **argv)
 {
 
-#if 1
-    int fd;
-    char *dev ="/dev/ttyUSB0";
+    serialInit();
+    int ret = 0;
 
-    fd = openDevice(dev);
-    if (fd > 0)
-        setBaudRate(fd, 115200);
-    else {
-        printf("Can't Open Serial Port!\n");
-        exit(0);
-    }
+    pthread_t serial_tid;
+    ret = pthread_create(&serial_tid, NULL, recvSerialDataThread, NULL);
 
-    printf("openDevice fd: %d\n", fd);
-    // 8位数据，非两位的停止位，不使用奇偶校验 ，不允许输入奇偶校验
-    if (setParity(fd, 8, 1, 'n') == false) {
-        printf("Set Parity Error\n");
-        exit(1);
-    }
-
-    g_fd = fd;
-#if 0
-    // acquire non-blocking exclusive lock
-    if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
-        printf("Serial port with file descriptor %d i already lockec by another process\n", fd);
-    }
-#endif
-//    char send_buff[12] = {0xFE, 0x09, 0x10, 0x36, 0x61, 0x6E, 0x24, 0x00, 0x4B, 0x12, 0x00, 0xFF};
-//    int bytes = writeData(g_fd, send_buff, sizeof(send_buff));
-
-    pthread_t tid;
-    // int ret = pthread_create(&tid, NULL, recvDataThread, &fd);
-    int ret = pthread_create(&tid, NULL, recvDataThread, NULL);
-
-    struct termios Opt;
-    tcgetattr(fd, &Opt);
-    printf("Opt.c_cflag: %d\n", Opt.c_cflag);
-    printf("Opt.c_iflag: %d\n", Opt.c_iflag);
-
-#endif
+    pthread_t cloud_tid;
+    ret = pthread_create(&cloud_tid, NULL, recvCloudDataThread, NULL);
 
 
-#if 0
+
+#if 0 // for test
     DeviceInfo device_info = {0};
     uint8_t id[4] = {1, 2, 3, 4};
 //    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
@@ -208,7 +182,7 @@ int main(int argc, char **argv)
         usleep(10000);
     }
 
-//    closeDevice(fd);
+    serialClose();
 
     return 0;
 }

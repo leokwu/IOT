@@ -89,9 +89,6 @@ int32_t deserialize_uart_package(const void *data)
     memcpy(ts, payload->ts, 8);
     uint8_t mcount = payload->mcount;
     printf("%s total: %d, id: %s, pid: %s, vid: %s, mcount: %d\n", __func__ , total, id, pid, vid, mcount);
-//    dumpData_leok(ts, sizeof(ts));
-//    MessagePackage *message = (MessagePackage *)payload->message;
-//    int32_t ret = deserialize_message(message);
 #endif
 
     get_short_addr(data);
@@ -143,7 +140,7 @@ int32_t deserialize_cloud_package(const void *data)
 
 // read zigbee info-------------------------------------------------
 
-int32_t deserialize_networking_package(const void *data)
+int32_t deserialize_shotaddr_package(const void *data)
 {
     if (NULL == data) {
         printf("deserialize_networking_package data null\n");
