@@ -16,6 +16,7 @@ static uint8_t g_short_addr[3] = {0};
 #pragma pack(1)
 typedef struct SwitchPackage {
     uint8_t head[6];
+    uint8_t rktb[4];
     uint16_t total;
     uint8_t id[4];
     uint8_t pid[2];
@@ -108,7 +109,7 @@ void parse_device_power_consumption(const void *data)
 
     uint32_t key = htobe32(msg_pkg->key);
     uint8_t vlength = msg_pkg->vlength;
-    uint32_t power_consumption = msg_pkg->value[0] << 16 | msg_pkg->value[1] << 8 | msg_pkg->value[2];
+    uint16_t power_consumption = msg_pkg->value[1] << 8 | msg_pkg->value[0];
     printf("%s, key: %d vlength: %d power_consumption: %d\n", __func__ , key, vlength, power_consumption);
 }
 
@@ -160,8 +161,10 @@ void get_short_addr(const void* data)
 //    mac[6] = 0x12;
 //    mac[7] = 0x00;
     char send_buff[12] = {0xFE, 0x09, 0x10, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], 0xFF};
+    printf("get_short_addr send_buff: \n");
+    dumpData_leok(send_buff, sizeof(send_buff));
     int bytes = serialWrite(send_buff, sizeof(send_buff));
-    sleep(2);
+    sleep(5);
 }
 
 
@@ -177,7 +180,7 @@ void parse_cloud_switch(const void *data)
 
     uint8_t mac[8] = {0};
     DeviceInfo select_device = {0};
-    ret = selectDevice("de12cd9600010001", (void *)&select_device);
+    ret = selectDevice("0000000001010202", (void *)&select_device);
     if ( DEVICE_OK != ret ) {
         printf("selectDevice ret: %d\n", ret);
         return;
@@ -188,14 +191,17 @@ void parse_cloud_switch(const void *data)
     SwitchPackage switch_package = {0};
 
     switch_package.head[0] = 0xFC;
-    switch_package.head[1] = 0x1D;
+    switch_package.head[1] = 0x21;
     switch_package.head[2] = 0x03;
     switch_package.head[3] = 0x01;
     switch_package.head[4] = g_short_addr[1];
     switch_package.head[5] = g_short_addr[2];
 
-
-    switch_package.total = htobe16(25);
+    switch_package.rktb[0] = 'R';
+    switch_package.rktb[1] = 'K';
+    switch_package.rktb[2] = 'T';
+    switch_package.rktb[3] = 'B';
+    switch_package.total = 25;
     memcpy(switch_package.id, select_device.id, sizeof(switch_package.id));
     memcpy(switch_package.pid, select_device.pid, sizeof(switch_package.pid));
     memcpy(switch_package.vid, select_device.vid, sizeof(switch_package.vid));

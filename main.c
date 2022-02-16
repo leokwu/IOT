@@ -78,6 +78,7 @@ void *recvSerialDataThread(void *arg)
             } else {
                 recv_len = serialRead(buff, buff_len);
                 if (recv_len > 0) {
+                    printf("serialRead start=====================================================\n");
                     printf("recv_len :%d\n", recv_len);
                     dumpData(buff, recv_len);
                     int head = (int)(buff[0] & 0xFF);
@@ -88,7 +89,7 @@ void *recvSerialDataThread(void *arg)
                     } else {
                         deserialize_uart_package(buff);
                     }
-
+                    printf("serialRead end=====================================================\n");
                 } else {
                     // printf("funcname:%s line:%d recv_len: %d\n",  __func__, __LINE__, recv_len);
                 }
@@ -103,10 +104,11 @@ void *recvCloudDataThread(void *arg)
     pthread_detach(pthread_self());
 
     //TODO:
-//    while(1) {
-//
-//    }
-    deserialize_cloud_package("leok");
+    while(1) {
+        deserialize_cloud_package("leok");
+        sleep(5);
+    }
+
 }
 
 

@@ -45,7 +45,7 @@ enum device_message_key {
 enum cloud_message_key {
     CLOUD_INVALID_MESSAGE = 0,
 
-    CLOUD_SWITCH_CONTROL = 0x00000001,
+    CLOUD_SWITCH_CONTROL = 0x00000005,
 
 };
 

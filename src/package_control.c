@@ -91,7 +91,6 @@ int32_t deserialize_uart_package(const void *data)
     printf("%s total: %d, id: %s, pid: %s, vid: %s, mcount: %d\n", __func__ , total, id, pid, vid, mcount);
 #endif
 
-    get_short_addr(data);
     int32_t ret = deserialize_device_message(data);
     printf("%s ret: %d\n", __func__, ret);
     return ret;
