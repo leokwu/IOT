@@ -70,7 +70,7 @@ static void freeJson(cJSON *json) {
     }
 }
 
-
+//----------------mqtt publish------------------------------------------------------
 static void onlinePublish(void *data)
 {
     if (NULL == data) {
@@ -104,12 +104,12 @@ static void voltageCurrentPublish(void *data)
         return;
     }
 
-    VCPublish* vc_publish = (VCPublish*) data;
+    VCPublish* publish = (VCPublish*) data;
 
     cJSON *item = cJSON_CreateObject();
-    cJSON_AddStringToObject(item, "deviceId", vc_publish->deviceid);
-    cJSON_AddStringToObject(item, "voltage", vc_publish->voltage);
-    cJSON_AddStringToObject(item, "current", vc_publish->current);
+    cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
+    cJSON_AddStringToObject(item, "voltage", publish->voltage);
+    cJSON_AddStringToObject(item, "current", publish->current);
 
     char *cjson = cJSON_Print(item);
     printf("json:%s\n", cjson);
@@ -130,11 +130,11 @@ static void powerConsumptionPublish(void *data)
         return;
     }
 
-    PCPublish* pc_publish = (PCPublish*) data;
+    PCPublish* publish = (PCPublish*) data;
 
     cJSON *item = cJSON_CreateObject();
-    cJSON_AddStringToObject(item, "deviceId", pc_publish->deviceid);
-    cJSON_AddStringToObject(item, "powerConsumption", pc_publish->power);
+    cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
+    cJSON_AddStringToObject(item, "powerConsumption", publish->power);
 
     char *cjson = cJSON_Print(item);
     printf("json:%s\n", cjson);
@@ -149,6 +149,32 @@ static void powerConsumptionPublish(void *data)
 }
 
 
+static void softLabelPublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    SLPublish* publish = (SLPublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
+    cJSON_AddStringToObject(item, "mac", publish->mac);
+
+    char *cjson = cJSON_Print(item);
+    printf("json:%s\n", cjson);
+
+    mqttMessagePublish(VOLTAGE_CURRENT_TOPIC, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+//----------------mqtt publish------------------------------------------------------
 
 void parse_device_online_offline(const void *data)
 {
@@ -164,8 +190,8 @@ void parse_device_online_offline(const void *data)
     uint8_t value = msg_pkg->value[0];
     printf("%s, key: %d vlength: %d value: %d\n", __func__ , key, vlength, value);
 
-    OnlinePublish online_publish = {0};
-    snprintf(online_publish.deviceid, sizeof(online_publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    OnlinePublish publish = {0};
+    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -176,8 +202,8 @@ void parse_device_online_offline(const void *data)
              payload->vid[1]);
 
     int status = (int)value;
-    snprintf(online_publish.status, sizeof(online_publish.status), "%d", status);
-    onlinePublish((void*)&online_publish);
+    snprintf(publish.status, sizeof(publish.status), "%d", status);
+    onlinePublish((void*)&publish);
 
 
 }
@@ -199,8 +225,8 @@ void parse_device_data_upload(const void *data)
     uint16_t current = msg_pkg->value[1] << 8 | msg_pkg->value[2]; // mA
     printf("%s, key: %d vlength: %d voltage: %d V, current: %d mA\n", __func__ , key, vlength, voltage, current);
 
-    VCPublish vc_publish = {0};
-    snprintf(vc_publish.deviceid, sizeof(vc_publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    VCPublish publish = {0};
+    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -211,10 +237,10 @@ void parse_device_data_upload(const void *data)
              payload->vid[1]);
 
     int voltage_transmit = (int)voltage;
-    snprintf(vc_publish.voltage, sizeof(vc_publish.voltage), "%d", voltage_transmit);
+    snprintf(publish.voltage, sizeof(publish.voltage), "%d", voltage_transmit);
     int current_transmit = (int)current;
-    snprintf(vc_publish.current, sizeof(vc_publish.current), "%d", current_transmit);
-    voltageCurrentPublish((void*)&vc_publish);
+    snprintf(publish.current, sizeof(publish.current), "%d", current_transmit);
+    voltageCurrentPublish((void*)&publish);
 
 }
 
@@ -233,8 +259,8 @@ void parse_device_power_consumption(const void *data)
     uint16_t power_consumption = msg_pkg->value[0] << 8 | msg_pkg->value[1];
     printf("%s, key: %d vlength: %d power_consumption: %d\n", __func__ , key, vlength, power_consumption);
 
-    PCPublish pc_publish = {0};
-    snprintf(pc_publish.deviceid, sizeof(pc_publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    PCPublish publish = {0};
+    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -245,8 +271,8 @@ void parse_device_power_consumption(const void *data)
              payload->vid[1]);
 
     int pc_transmit = (int)power_consumption;
-    snprintf(pc_publish.power, sizeof(pc_publish.power), "%d", pc_transmit);
-    powerConsumptionPublish((void*)&pc_publish);
+    snprintf(publish.power, sizeof(publish.power), "%d", pc_transmit);
+    powerConsumptionPublish((void*)&publish);
 
 }
 
@@ -276,6 +302,28 @@ void parse_device_soft_label(const void *data)
     addDevice((void *)&device_info);
 
     printf("%s, key: %d vlength: %d mac: %s\n", __func__ , key, vlength, mac);
+
+    SLPublish publish = {0};
+    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             payload->id[0],
+             payload->id[1],
+             payload->id[2],
+             payload->id[3],
+             payload->pid[0],
+             payload->pid[1],
+             payload->vid[0],
+             payload->vid[1]);
+
+    snprintf(publish.mac, sizeof(publish.mac), "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+             mac[0],
+             mac[1],
+             mac[2],
+             mac[3],
+             mac[4],
+             mac[5],
+             mac[6],
+             mac[7]);
+    softLabelPublish((void*)&publish);
 }
 
 

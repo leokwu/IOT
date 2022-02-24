@@ -17,6 +17,8 @@ extern "C" {
 #define ONLINE_TOPIC                "/device_online_status"
 #define VOLTAGE_CURRENT_TOPIC       "/device_voltage_current"
 #define POWER_CONSUMPTION_TOPIC     "/device_power_consumption"
+#define SOFT_LABEL_TOPIC            "/device_soft_label"
+#define SWITCH_CONTROL_TOPIC         "/device_switch_control"
 
 #pragma pack(1)
 typedef struct PayloadPackage {
@@ -66,6 +68,13 @@ typedef struct PCPublish {
     uint8_t deviceid[64];
     char power[8];
 } PCPublish;
+
+
+#pragma pack(1)
+typedef struct SLPublish {
+    uint8_t deviceid[64];
+    char mac[32];
+} SLPublish;
 
 enum device_message_key {
     DEVICE_INVALID_MESSAGE = 0,

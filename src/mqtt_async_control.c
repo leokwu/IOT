@@ -232,14 +232,26 @@ void powerConsumptionSubscribe()
     mqttMessageSubscribe(POWER_CONSUMPTION_TOPIC);
 }
 
+void softLabelSubscribe()
+{
+    mqttMessageSubscribe(SOFT_LABEL_TOPIC);
+}
+
+void switchControlSubscribe()
+{
+    mqttMessageSubscribe(SWITCH_CONTROL_TOPIC);
+}
+
 
 void onConnect(void* context, MQTTAsync_successData* response)
 {
 
 
     readPropertySubscribe();
-    onlineSubscribe();
-    powerConsumptionSubscribe();
+//    onlineSubscribe();
+//    powerConsumptionSubscribe();
+//    softLabelSubscribe();
+    switchControlSubscribe();
 
 #if 0
     cJSON *root = cJSON_CreateObject();
@@ -253,7 +265,7 @@ void onConnect(void* context, MQTTAsync_successData* response)
     cJSON_AddItemToObject(root, "properties", properties);
 
     char *cjson1 = cJSON_Print(root);
-    printf("json1:%s\n", cjson1);
+    printf("json:%s\n", cjson1);
     mqttMessagePublish(SUBSCRIBE_TOPIC, cjson1);
 
 
