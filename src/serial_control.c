@@ -122,7 +122,7 @@ static int setParity(int fd, int databits, int stopbits, int parity)
     }
 
     options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-    options.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON | IXOFF);
+    options.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON | IXOFF | IGNCR);
 
     options.c_cc[VTIME] = 150; // 15 seconds
     options.c_cc[VMIN] = 0; // read doesn't block

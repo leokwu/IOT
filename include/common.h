@@ -13,6 +13,11 @@
 extern "C" {
 #endif
 
+
+#define ONLINE_TOPIC                "/device_online_status"
+#define VOLTAGE_CURRENT_TOPIC       "/device_voltage_current"
+#define POWER_CONSUMPTION_TOPIC     "/device_power_consumption"
+
 #pragma pack(1)
 typedef struct PayloadPackage {
     uint16_t total;
@@ -31,6 +36,36 @@ typedef struct MessagePackage {
     uint8_t  value[];
 } MessagePackage;
 
+
+
+#pragma pack(1)
+typedef struct DeviceInfo {
+    uint8_t id[4];
+    uint8_t pid[2];
+    uint8_t vid[2];
+    uint8_t  mac[8];
+} DeviceInfo;
+
+
+#pragma pack(1)
+typedef struct OnlinePublish {
+    uint8_t deviceid[64];
+    char status[2];
+} OnlinePublish;
+
+
+#pragma pack(1)
+typedef struct VCPublish {
+    uint8_t deviceid[64];
+    char voltage[8];
+    char current[8];
+} VCPublish;
+
+#pragma pack(1)
+typedef struct PCPublish {
+    uint8_t deviceid[64];
+    char power[8];
+} PCPublish;
 
 enum device_message_key {
     DEVICE_INVALID_MESSAGE = 0,
@@ -72,13 +107,6 @@ enum device_error {
 
 };
 
-#pragma pack(1)
-typedef struct DeviceInfo {
-    uint8_t id[4];
-    uint8_t pid[2];
-    uint8_t vid[2];
-    uint8_t  mac[8];
-} DeviceInfo;
 
 #ifdef __cplusplus
 }

@@ -19,6 +19,7 @@
 #include "serial_control.h"
 #include "device_manager.h"
 #include "package_control.h"
+#include "mqtt_async_control.h"
 
 
 
@@ -113,6 +114,19 @@ void *recvCloudDataThread(void *arg)
 
 
 
+void *mqttThread(void *arg)
+{
+    int ret = 0;
+
+    while(1) {
+        ret = mqttMainProcess();
+        usleep(10000L);
+    }
+
+}
+
+
+
 /**
 *@breif     main()
 */
@@ -128,57 +142,9 @@ int main(int argc, char **argv)
     pthread_t cloud_tid;
     ret = pthread_create(&cloud_tid, NULL, recvCloudDataThread, NULL);
 
+    pthread_t mqtt_tid;
+    ret = pthread_create(&mqtt_tid, NULL, mqttThread, NULL);
 
-
-#if 0 // for test
-    DeviceInfo device_info = {0};
-    uint8_t id[4] = {1, 2, 3, 4};
-//    snprintf(ter_info.id, sizeof(ter_info.id), "%s", id);
-    memcpy(device_info.id, id, sizeof(device_info.id));
-    printf("device_info.id: \n");
-    dumpData(device_info.id, 4);
-
-    uint8_t pid[2] = {5, 6};
-//    snprintf(ter_info.pid, sizeof(ter_info.pid), "%s", pid);
-    memcpy(device_info.pid, pid, sizeof(device_info.pid));
-    printf("device_info.pid: \n");
-    dumpData(device_info.pid, 2);
-
-    uint8_t vid[2] = {7, 8};
-//    snprintf(ter_info.vid, sizeof(ter_info.vid), "%s", vid);
-    memcpy(device_info.vid, vid, sizeof(device_info.vid));
-    printf("device_info.vid: \n");
-    dumpData(device_info.vid, 2);
-
-    uint8_t mac[8] = {11, 22, 33, 44, 55, 66, 77, 88};
-//    snprintf(ter_info.mac, sizeof(ter_info.mac), "%s", mac);
-    memcpy(device_info.mac, mac, sizeof(device_info.mac));
-    printf("device_info.mac: \n");
-    dumpData(device_info.mac, 8);
-
-//    int insert_ret =  insert_item_to_list((void *)&ter_info);
-    addDevice((void *)&device_info);
-
-    uint8_t label[64] = {0};
-    snprintf(label, sizeof(label), "%02x%02x%02x%02x%02x%02x%02x%02x",
-             device_info.id[0],
-             device_info.id[1],
-             device_info.id[2],
-             device_info.id[3],
-             device_info.pid[0],
-             device_info.pid[1],
-             device_info.vid[0],
-             device_info.vid[1]);
-
-
-    DeviceInfo select_device = {0};
-    selectDevice(label, (void *)&select_device);
-    printf("select device after: ");
-    dumpData(select_device.id, sizeof(select_device.id));
-    dumpData(select_device.pid, sizeof(select_device.pid));
-    dumpData(select_device.vid, sizeof(select_device.vid));
-    dumpData(select_device.mac, sizeof(select_device.mac));
-#endif
 
     while (getchar() != 'q') {
         usleep(10000);

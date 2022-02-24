@@ -6,10 +6,13 @@
 #include <string.h>
 #include <endian.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <cjson/cJSON.h>
 
 #include "message_control.h"
 #include "device_manager.h"
 #include "serial_control.h"
+#include "mqtt_async_control.h"
 
 static uint8_t g_short_addr[3] = {0};
 
@@ -27,8 +30,6 @@ typedef struct SwitchPackage {
     uint8_t vlength;
     uint8_t  value;
 } SwitchPackage;
-
-
 
 
 static void dumpData_leok(const unsigned char *buf, size_t length) {
@@ -63,6 +64,91 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
 }
 
 
+static void freeJson(cJSON *json) {
+    if (json != NULL) {
+        cJSON_Delete(json);
+    }
+}
+
+
+static void onlinePublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    OnlinePublish* online_publish = (OnlinePublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "deviceId", online_publish->deviceid);
+    cJSON_AddStringToObject(item, "status", online_publish->status);
+
+    char *cjson = cJSON_Print(item);
+    printf("json:%s\n", cjson);
+
+    mqttMessagePublish(ONLINE_TOPIC, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+
+static void voltageCurrentPublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    VCPublish* vc_publish = (VCPublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "deviceId", vc_publish->deviceid);
+    cJSON_AddStringToObject(item, "voltage", vc_publish->voltage);
+    cJSON_AddStringToObject(item, "current", vc_publish->current);
+
+    char *cjson = cJSON_Print(item);
+    printf("json:%s\n", cjson);
+
+    mqttMessagePublish(VOLTAGE_CURRENT_TOPIC, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+static void powerConsumptionPublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    PCPublish* pc_publish = (PCPublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "deviceId", pc_publish->deviceid);
+    cJSON_AddStringToObject(item, "powerConsumption", pc_publish->power);
+
+    char *cjson = cJSON_Print(item);
+    printf("json:%s\n", cjson);
+
+    mqttMessagePublish(VOLTAGE_CURRENT_TOPIC, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+
 
 void parse_device_online_offline(const void *data)
 {
@@ -77,6 +163,23 @@ void parse_device_online_offline(const void *data)
     uint8_t vlength = msg_pkg->vlength;
     uint8_t value = msg_pkg->value[0];
     printf("%s, key: %d vlength: %d value: %d\n", __func__ , key, vlength, value);
+
+    OnlinePublish online_publish = {0};
+    snprintf(online_publish.deviceid, sizeof(online_publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             payload->id[0],
+             payload->id[1],
+             payload->id[2],
+             payload->id[3],
+             payload->pid[0],
+             payload->pid[1],
+             payload->vid[0],
+             payload->vid[1]);
+
+    int status = (int)value;
+    snprintf(online_publish.status, sizeof(online_publish.status), "%d", status);
+    onlinePublish((void*)&online_publish);
+
+
 }
 
 void parse_device_data_upload(const void *data)
@@ -95,6 +198,24 @@ void parse_device_data_upload(const void *data)
     uint8_t voltage = msg_pkg->value[0]; // V
     uint16_t current = msg_pkg->value[1] << 8 | msg_pkg->value[2]; // mA
     printf("%s, key: %d vlength: %d voltage: %d V, current: %d mA\n", __func__ , key, vlength, voltage, current);
+
+    VCPublish vc_publish = {0};
+    snprintf(vc_publish.deviceid, sizeof(vc_publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             payload->id[0],
+             payload->id[1],
+             payload->id[2],
+             payload->id[3],
+             payload->pid[0],
+             payload->pid[1],
+             payload->vid[0],
+             payload->vid[1]);
+
+    int voltage_transmit = (int)voltage;
+    snprintf(vc_publish.voltage, sizeof(vc_publish.voltage), "%d", voltage_transmit);
+    int current_transmit = (int)current;
+    snprintf(vc_publish.current, sizeof(vc_publish.current), "%d", current_transmit);
+    voltageCurrentPublish((void*)&vc_publish);
+
 }
 
 void parse_device_power_consumption(const void *data)
@@ -109,8 +230,24 @@ void parse_device_power_consumption(const void *data)
 
     uint32_t key = htobe32(msg_pkg->key);
     uint8_t vlength = msg_pkg->vlength;
-    uint16_t power_consumption = msg_pkg->value[1] << 8 | msg_pkg->value[0];
+    uint16_t power_consumption = msg_pkg->value[0] << 8 | msg_pkg->value[1];
     printf("%s, key: %d vlength: %d power_consumption: %d\n", __func__ , key, vlength, power_consumption);
+
+    PCPublish pc_publish = {0};
+    snprintf(pc_publish.deviceid, sizeof(pc_publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             payload->id[0],
+             payload->id[1],
+             payload->id[2],
+             payload->id[3],
+             payload->pid[0],
+             payload->pid[1],
+             payload->vid[0],
+             payload->vid[1]);
+
+    int pc_transmit = (int)power_consumption;
+    snprintf(pc_publish.power, sizeof(pc_publish.power), "%d", pc_transmit);
+    powerConsumptionPublish((void*)&pc_publish);
+
 }
 
 
