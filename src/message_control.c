@@ -16,22 +16,6 @@
 
 static uint8_t g_short_addr[3] = {0};
 
-#pragma pack(1)
-typedef struct SwitchPackage {
-    uint8_t head[6];
-    uint8_t rktb[4];
-    uint16_t total;
-    uint8_t id[4];
-    uint8_t pid[2];
-    uint8_t vid[2];
-    uint8_t ts[8];
-    uint8_t mcount;
-    uint32_t key;
-    uint8_t vlength;
-    uint8_t  value;
-} SwitchPackage;
-
-
 static void dumpData_leok(const unsigned char *buf, size_t length) {
     printf("leok----dump data: ");
     int n = 0;
@@ -205,7 +189,6 @@ void parse_device_online_offline(const void *data)
     snprintf(publish.status, sizeof(publish.status), "%d", status);
     onlinePublish((void*)&publish);
 
-
 }
 
 void parse_device_data_upload(const void *data)
@@ -337,35 +320,30 @@ void get_short_addr(const void* data)
     memset(g_short_addr, 0, sizeof(g_short_addr));
     uint8_t mac[8] = {0};
     memcpy(mac, data, sizeof(mac));
-//    mac[0] = 0x36;
-//    mac[1] = 0x61;
-//    mac[2] = 0x6E;
-//    mac[3] = 0x24;
-//    mac[4] = 0x00;
-//    mac[5] = 0x4B;
-//    mac[6] = 0x12;
-//    mac[7] = 0x00;
     char send_buff[12] = {0xFE, 0x09, 0x10, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], 0xFF};
     printf("get_short_addr send_buff: \n");
     dumpData_leok(send_buff, sizeof(send_buff));
     int bytes = serialWrite(send_buff, sizeof(send_buff));
-    sleep(5);
+    sleep(3);
 }
 
 
-void parse_cloud_switch(const void *data)
+static void writeSwitchControl(const void *data)
 {
-
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
         return;
     }
 
-    int ret = -1;
+    switchControl *swicth_control = (switchControl *)data;
+    printf("%s: dump switchControl\n", __func__ );
+    dumpData_leok(swicth_control->deviceid, sizeof(swicth_control->deviceid));
+    printf("swicth_control->control: %d\n", swicth_control->control);
 
+    int ret = -1;
     uint8_t mac[8] = {0};
     DeviceInfo select_device = {0};
-    ret = selectDevice("0000000001010202", (void *)&select_device);
+    ret = selectDevice(swicth_control->deviceid, (void *)&select_device);
     if ( DEVICE_OK != ret ) {
         printf("selectDevice ret: %d\n", ret);
         return;
@@ -394,16 +372,50 @@ void parse_cloud_switch(const void *data)
     switch_package.mcount = 1;
     switch_package.key = htobe32(CLOUD_SWITCH_CONTROL);
     switch_package.vlength = 1;
-    switch_package.value = 2;
-//
-//
-//    dumpData_leok((const unsigned char *)&switch_package, sizeof(switch_package));
-//    char send_buff[9] = {0xFC, 0x07, 0x03, 0x01, 0x53, 0x37, 0x31, 0x32, 0x33};
-//    serialWrite(send_buff, sizeof(send_buff));
+    switch_package.value = swicth_control->control;
 
     printf("sizeof(switch_package): %ld\n", sizeof(switch_package));
     int bytes = serialWrite((const char *)&switch_package, sizeof(switch_package));
     printf("writeData bytes: %d\n", bytes);
+}
+
+
+void parse_cloud_switch(const void *data)
+{
+
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    PublishArrived *pb_arrived = (PublishArrived *)data;
+    switchControl swicth_control ={0};
+
+    cJSON *json_root = cJSON_Parse(pb_arrived->message);
+    if (NULL == json_root) {
+        printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());
+    }
+
+    cJSON *deviceId = cJSON_GetObjectItem(json_root, "deviceId");
+    if (NULL == deviceId) {
+        printf("deviceId node not exist\n");
+        return;
+    }
+    printf("deviceId->valuestring: %s\n", deviceId->valuestring);
+    memcpy(swicth_control.deviceid, deviceId->valuestring, sizeof(swicth_control.deviceid));
+
+    cJSON *control = cJSON_GetObjectItem(json_root, "switch");
+    if (NULL == control) {
+        printf("control node not exist\n");
+        return;
+    }
+    printf("control->valuestring: %s\n", control->valuestring);
+    swicth_control.control = atoi(control->valuestring);
+//    memcpy(swicth_control.control, control->valuestring, sizeof(swicth_control.control));
+
+
+    writeSwitchControl((void *)&swicth_control);
+    freeJson(json_root);
 
 }
 

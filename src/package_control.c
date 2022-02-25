@@ -110,15 +110,17 @@ int32_t deserialize_cloud_message(const void *data)
 {
     const struct parse_cloud_message_map map[] = { { CLOUD_SWITCH_CONTROL, parse_cloud_switch } };
 
+    PublishArrived *pb_arrived = (PublishArrived *)data;
+
     for (uint32_t i = 0; i < sizeof(map) / sizeof(struct parse_cloud_message_map); i++) {
-        if (map[i].msg_key != CLOUD_SWITCH_CONTROL) {
+        if (map[i].msg_key != pb_arrived->topic) {
             continue;
         }
-        printf("deserialize_cloud_message support parse 0x%08x message\n", CLOUD_SWITCH_CONTROL);
+        printf("deserialize_cloud_message support parse 0x%08x message\n", pb_arrived->topic);
         map[i].parse_message(data);
         return PACKAGE_OK;
     }
-    printf("deserialize_cloud_message Unsupport parse 0x%08x message\n", CLOUD_SWITCH_CONTROL);
+    printf("deserialize_cloud_message Unsupport parse 0x%08x message\n", pb_arrived->topic);
     return PACKAGE_UNKNOW_MESSAGE;
 }
 

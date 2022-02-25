@@ -99,21 +99,6 @@ void *recvSerialDataThread(void *arg)
     }
 }
 
-
-void *recvCloudDataThread(void *arg)
-{
-    pthread_detach(pthread_self());
-
-    //TODO:
-    while(1) {
-        deserialize_cloud_package("leok");
-        sleep(5);
-    }
-
-}
-
-
-
 void *mqttThread(void *arg)
 {
     int ret = 0;
@@ -138,9 +123,6 @@ int main(int argc, char **argv)
 
     pthread_t serial_tid;
     ret = pthread_create(&serial_tid, NULL, recvSerialDataThread, NULL);
-
-    pthread_t cloud_tid;
-    ret = pthread_create(&cloud_tid, NULL, recvCloudDataThread, NULL);
 
     pthread_t mqtt_tid;
     ret = pthread_create(&mqtt_tid, NULL, mqttThread, NULL);

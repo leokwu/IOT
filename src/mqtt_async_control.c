@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include "mqtt_async_control.h"
+#include "package_control.h"
 
 #define ADDRESS             "tcp://218.104.230.76:17124"
 //#define ADDRESS           "tcp://10.10.10.10:1883"
@@ -247,7 +248,7 @@ void onConnect(void* context, MQTTAsync_successData* response)
 {
 
 
-    readPropertySubscribe();
+//    readPropertySubscribe();
 //    onlineSubscribe();
 //    powerConsumptionSubscribe();
 //    softLabelSubscribe();
@@ -284,9 +285,26 @@ int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_messa
 {
     printf("Message arrived\n");
     printf("     topic: %s\n", topicName);
-    printf("   message: %.*s\n", message->payloadlen, (char*)message->payload);
-    MQTTAsync_freeMessage(&message);
-    MQTTAsync_free(topicName);
+    printf("     topicLen: %d\n", topicLen);
+    printf("     message: %.*s\n", message->payloadlen, (char*)message->payload);
+
+    PublishArrived pb_arrived = {0};
+    if( 0 == strncmp(topicName, SWITCH_CONTROL_TOPIC, topicLen) ) {
+        if (message->payloadlen > ARRIVED_MESSAGE_LEN) {
+            printf("message->payloadlen: %d > ARRIVED_MESSAGE_LEN: %d\n", message->payloadlen, ARRIVED_MESSAGE_LEN);
+            return 1;
+        }
+        pb_arrived.topic = CLOUD_SWITCH_CONTROL;
+        memcpy(pb_arrived.message, (char*)message->payload, sizeof(pb_arrived.message));
+        deserialize_cloud_package((void*)&pb_arrived);
+    }
+    if (message) {
+        MQTTAsync_freeMessage(&message);
+    }
+
+    if (topicName) {
+        MQTTAsync_free(topicName);
+    }
 
 	return 1;
 }
