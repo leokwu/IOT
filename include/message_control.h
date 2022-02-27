@@ -67,8 +67,6 @@ typedef struct SLPublish {
     char mac[32];
 } SLPublish;
 
-
-
 #pragma pack(1)
 typedef struct switchControl {
     char deviceid[64];

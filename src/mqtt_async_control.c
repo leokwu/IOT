@@ -256,16 +256,16 @@ void onConnect(void* context, MQTTAsync_successData* response)
     cJSON_AddStringToObject(properties, "temp", "40");
     cJSON_AddItemToObject(root, "properties", properties);
 
-    char *cjson1 = cJSON_Print(root);
+    char *cjson = cJSON_Print(root);
     printf("json:%s\n", cjson1);
-    mqttMessagePublish(SUBSCRIBE_TOPIC, cjson1);
+    mqttMessagePublish(SUBSCRIBE_TOPIC, cjson);
 
 
     if (root != NULL) {
         cJSON_Delete(root);
     }
 
-    if (cjson1 != NULL) {
+    if (cjson != NULL) {
         free(cjson1);
     }
 #endif
@@ -279,16 +279,9 @@ int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_messa
     printf("     topicLen: %d\n", topicLen);
     printf("     message: %.*s\n", message->payloadlen, (char*)message->payload);
 
-    PublishArrived pb_arrived = {0};
-    if( 0 == strncmp(topicName, INVOKE_FUNCTION_TOPIC, topicLen) ) {
-        if (message->payloadlen > ARRIVED_MESSAGE_LEN) {
-            printf("message->payloadlen: %d > ARRIVED_MESSAGE_LEN: %d\n", message->payloadlen, ARRIVED_MESSAGE_LEN);
-            return 1;
-        }
-        pb_arrived.topic = CLOUD_SWITCH_CONTROL;
-        memcpy(pb_arrived.message, (char*)message->payload, sizeof(pb_arrived.message));
-        deserialize_cloud_package((void*)&pb_arrived);
-    }
+
+    deserialize_cloud_package(topicName, topicLen, message->payloadlen, message->payload);
+
     if (message) {
         MQTTAsync_freeMessage(&message);
     }

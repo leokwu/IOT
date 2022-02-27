@@ -400,27 +400,71 @@ void parse_cloud_switch(const void *data)
     cJSON *json_root = cJSON_Parse(pb_arrived->message);
     if (NULL == json_root) {
         printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());
+        return;
     }
 
     cJSON *deviceId = cJSON_GetObjectItem(json_root, "deviceId");
     if (NULL == deviceId) {
         printf("deviceId node not exist\n");
-        return;
+        goto FREE_JSON;
     }
     printf("deviceId->valuestring: %s\n", deviceId->valuestring);
     memcpy(swicth_control.deviceid, deviceId->valuestring, sizeof(swicth_control.deviceid));
 
-    cJSON *control = cJSON_GetObjectItem(json_root, "switch");
-    if (NULL == control) {
-        printf("control node not exist\n");
-        return;
+    cJSON *function = cJSON_GetObjectItem(json_root, "function");
+    if (NULL == function) {
+        printf("function node not exist\n");
+        goto FREE_JSON;
     }
-    printf("control->valuestring: %s\n", control->valuestring);
-    swicth_control.control = atoi(control->valuestring);
-//    memcpy(swicth_control.control, control->valuestring, sizeof(swicth_control.control));
+    printf("function->valuestring: %s\n", function->valuestring);
+
+    cJSON *args = cJSON_GetObjectItem(json_root, "args");
+    if (NULL == args) {
+        printf("args node not exist\n");
+        goto FREE_JSON;
+    }
+    printf("args->string: %s\n", args->string);
+
+    int array_size = cJSON_GetArraySize(args);
+    printf("array_size: %d\n", array_size);
+
+    for (int cnt = 0; cnt < array_size; cnt++) {
+        cJSON *sub = cJSON_GetArrayItem(args, cnt);
+        if (NULL == sub) {
+            continue;
+        }
+
+        cJSON *name = cJSON_GetObjectItem(sub, "name");
+        if (NULL == name) {
+            printf("name node not exist\n");
+            goto FREE_JSON;
+        }
+        printf("name->valuestring: %s\n", name->valuestring);
+
+        if (0 == strncmp(name->valuestring, "switch", sizeof("switch"))) {
+            cJSON *value = cJSON_GetObjectItem(sub, "value");
+            if (NULL == value) {
+                printf("value node not exist\n");
+                goto FREE_JSON;
+            }
+            printf("value->valuestring: %s\n", value->valuestring);
+            swicth_control.control = atoi(value->valuestring);
+            writeSwitchControl((void *)&swicth_control);
+        }
+    }
+
+#if 1
+    cJSON *messageId = cJSON_GetObjectItem(json_root, "messageId");
+    if (NULL == messageId) {
+        printf("messageId node not exist\n");
+        goto FREE_JSON;
+    }
+    printf("messageId->valuestring: %s\n", messageId->valuestring);
+#endif
 
 
-    writeSwitchControl((void *)&swicth_control);
+FREE_JSON:
+
     freeJson(json_root);
 
 }

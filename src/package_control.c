@@ -1,11 +1,15 @@
 //
 // Created by leok on 2022/1/21.
 //
+
+#include <endian.h>
+#include <cjson/cJSON.h>
+
 #include "package_control.h"
 #include "message_control.h"
-#include <endian.h>
+#include "mqtt_async_control.h"
 
-
+#define SWITCH_FUNCTION "switch"
 
 static void dumpData_leok(const unsigned char *buf, size_t length) {
     printf("leok----dump data: ");
@@ -113,26 +117,77 @@ int32_t deserialize_cloud_message(const void *data)
     PublishArrived *pb_arrived = (PublishArrived *)data;
 
     for (uint32_t i = 0; i < sizeof(map) / sizeof(struct parse_cloud_message_map); i++) {
-        if (map[i].msg_key != pb_arrived->topic) {
+        if (map[i].msg_key != pb_arrived->function) {
             continue;
         }
-        printf("deserialize_cloud_message support parse 0x%08x message\n", pb_arrived->topic);
+        printf("deserialize_cloud_message support parse 0x%08x message\n", pb_arrived->function);
         map[i].parse_message(data);
         return PACKAGE_OK;
     }
-    printf("deserialize_cloud_message Unsupport parse 0x%08x message\n", pb_arrived->topic);
+    printf("deserialize_cloud_message Unsupport parse 0x%08x message\n", pb_arrived->function);
     return PACKAGE_UNKNOW_MESSAGE;
 }
 
 
-int32_t deserialize_cloud_package(const void *data)
+
+uint32_t get_function_type(void *data) {
+
+    cJSON *json_root = cJSON_Parse(data);
+    if (NULL == json_root) {
+        printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());
+    }
+
+    uint32_t ret = 0;
+
+    cJSON *function = cJSON_GetObjectItem(json_root, "function");
+    if (NULL == function) {
+        printf("function node not exist\n");
+        ret = CLOUD_INVALID_MESSAGE;
+        goto FREE_JSON;
+    }
+    printf("function->valuestring: %s\n", function->valuestring);
+    if( 0 == strncmp(function->valuestring, SWITCH_FUNCTION, sizeof(SWITCH_FUNCTION)) ) {
+        ret = CLOUD_SWITCH_CONTROL;
+        goto FREE_JSON;
+
+    } else {
+        printf("function->valuestring: %s not adjust %s\n", function->valuestring, SWITCH_FUNCTION);
+        ret = CLOUD_INVALID_MESSAGE;
+        goto FREE_JSON;
+    }
+
+FREE_JSON:
+
+    if (json_root != NULL) {
+        cJSON_Delete(json_root);
+    }
+
+    return ret;
+}
+
+int32_t deserialize_cloud_package(char* topicName, int topicLen, int payloadlen, void *payload)
 {
-    if (NULL == data) {
+    if (NULL == topicName || NULL == payload) {
         printf("deserialize_cloud_package data null\n");
         return PACKAGE_PTR_NULL;
     }
-    int32_t ret = 0;
-    ret = deserialize_cloud_message(data);
+
+    uint32_t ret = 0;
+
+    if( 0 == strncmp(topicName, INVOKE_FUNCTION_TOPIC, topicLen) ) {
+        if (payloadlen > ARRIVED_MESSAGE_LEN) {
+            printf("message->payloadlen: %d > ARRIVED_MESSAGE_LEN: %d\n", payloadlen, ARRIVED_MESSAGE_LEN);
+            return 1;
+        }
+
+        ret = get_function_type(payload);
+        if (ret == CLOUD_SWITCH_CONTROL) {
+            PublishArrived pb_arrived = {0};
+            pb_arrived.function = CLOUD_SWITCH_CONTROL;
+            memcpy(pb_arrived.message, (char*)payload, sizeof(pb_arrived.message));
+            ret = deserialize_cloud_message((void*)&pb_arrived);
+        }
+    }
     return ret;
 }
 

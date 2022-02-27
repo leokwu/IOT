@@ -11,10 +11,9 @@ extern "C" {
 
 //int32_t deserialize_device_message(const void *data);
 int32_t deserialize_uart_package(const void *data);
-
-int32_t deserialize_cloud_package(const void *data);
-
 int32_t deserialize_shotaddr_package(const void *data);
+int32_t deserialize_cloud_package(char* topicName, int topicLen, int payloadlen, void *payload);
+
 
 #ifdef __cplusplus
 }

@@ -46,7 +46,7 @@ typedef struct DeviceInfo {
 
 #pragma pack(1)
 typedef struct PublishArrived {
-    uint32_t topic;
+    uint32_t function;
     char message[ARRIVED_MESSAGE_LEN];
 } PublishArrived;
 
