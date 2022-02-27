@@ -28,7 +28,6 @@
 #define ADDRESS             "tcp://218.104.230.76:17124"
 //#define ADDRESS           "tcp://10.10.10.10:1883"
 #define CLIENTID            "toybrick"
-#define READ_PROPERTY_TOPIC  "/read-property"
 #define DISCOVERY_TOPIC      "homeassistant/sensor/device1/config"
 
 #define QOS                  1
@@ -218,9 +217,9 @@ void discoveryPublish()
 }
 
 
-void readPropertySubscribe()
+void reportPropertySubscribe()
 {
-    mqttMessageSubscribe(READ_PROPERTY_TOPIC);
+    mqttMessageSubscribe(REPORT_PROPERTIES_TOPIC);
 }
 
 void onlineSubscribe()
@@ -228,19 +227,15 @@ void onlineSubscribe()
     mqttMessageSubscribe(ONLINE_TOPIC);
 }
 
-void powerConsumptionSubscribe()
+
+void tagsSubscribe()
 {
-    mqttMessageSubscribe(POWER_CONSUMPTION_TOPIC);
+    mqttMessageSubscribe(TAGS_TOPIC);
 }
 
-void softLabelSubscribe()
+void inbvokeFunctionSubscribe()
 {
-    mqttMessageSubscribe(SOFT_LABEL_TOPIC);
-}
-
-void switchControlSubscribe()
-{
-    mqttMessageSubscribe(SWITCH_CONTROL_TOPIC);
+    mqttMessageSubscribe(INVOKE_FUNCTION_TOPIC);
 }
 
 
@@ -248,11 +243,7 @@ void onConnect(void* context, MQTTAsync_successData* response)
 {
 
 
-//    readPropertySubscribe();
-//    onlineSubscribe();
-//    powerConsumptionSubscribe();
-//    softLabelSubscribe();
-    switchControlSubscribe();
+    inbvokeFunctionSubscribe();
 
 #if 0
     cJSON *root = cJSON_CreateObject();
@@ -289,7 +280,7 @@ int messageArrived(void* context, char* topicName, int topicLen, MQTTAsync_messa
     printf("     message: %.*s\n", message->payloadlen, (char*)message->payload);
 
     PublishArrived pb_arrived = {0};
-    if( 0 == strncmp(topicName, SWITCH_CONTROL_TOPIC, topicLen) ) {
+    if( 0 == strncmp(topicName, INVOKE_FUNCTION_TOPIC, topicLen) ) {
         if (message->payloadlen > ARRIVED_MESSAGE_LEN) {
             printf("message->payloadlen: %d > ARRIVED_MESSAGE_LEN: %d\n", message->payloadlen, ARRIVED_MESSAGE_LEN);
             return 1;

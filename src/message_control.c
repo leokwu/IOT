@@ -54,7 +54,7 @@ static void freeJson(cJSON *json) {
     }
 }
 
-//----------------mqtt publish------------------------------------------------------
+//----------------mqtt publish start------------------------------------------------------
 static void onlinePublish(void *data)
 {
     if (NULL == data) {
@@ -91,14 +91,16 @@ static void voltageCurrentPublish(void *data)
     VCPublish* publish = (VCPublish*) data;
 
     cJSON *item = cJSON_CreateObject();
+    cJSON *properties = cJSON_CreateObject();
     cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
-    cJSON_AddStringToObject(item, "voltage", publish->voltage);
-    cJSON_AddStringToObject(item, "current", publish->current);
+    cJSON_AddStringToObject(properties, "voltage", publish->voltage);
+    cJSON_AddStringToObject(properties, "current", publish->current);
+    cJSON_AddItemToObject(item, "properties", properties);
 
     char *cjson = cJSON_Print(item);
     printf("json:%s\n", cjson);
 
-    mqttMessagePublish(VOLTAGE_CURRENT_TOPIC, cjson);
+    mqttMessagePublish(REPORT_PROPERTIES_TOPIC, cjson);
 
     freeJson(item);
 
@@ -117,13 +119,15 @@ static void powerConsumptionPublish(void *data)
     PCPublish* publish = (PCPublish*) data;
 
     cJSON *item = cJSON_CreateObject();
+    cJSON *properties = cJSON_CreateObject();
     cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
-    cJSON_AddStringToObject(item, "powerConsumption", publish->power);
+    cJSON_AddStringToObject(properties, "powerConsumption", publish->power);
+    cJSON_AddItemToObject(item, "properties", properties);
 
     char *cjson = cJSON_Print(item);
     printf("json:%s\n", cjson);
 
-    mqttMessagePublish(VOLTAGE_CURRENT_TOPIC, cjson);
+    mqttMessagePublish(REPORT_PROPERTIES_TOPIC, cjson);
 
     freeJson(item);
 
@@ -143,13 +147,15 @@ static void softLabelPublish(void *data)
     SLPublish* publish = (SLPublish*) data;
 
     cJSON *item = cJSON_CreateObject();
+    cJSON *tags = cJSON_CreateObject();
     cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
-    cJSON_AddStringToObject(item, "mac", publish->mac);
+    cJSON_AddStringToObject(tags, "mac", publish->mac);
+    cJSON_AddItemToObject(item, "tags", tags);
 
     char *cjson = cJSON_Print(item);
     printf("json:%s\n", cjson);
 
-    mqttMessagePublish(VOLTAGE_CURRENT_TOPIC, cjson);
+    mqttMessagePublish(TAGS_TOPIC, cjson);
 
     freeJson(item);
 
@@ -158,7 +164,7 @@ static void softLabelPublish(void *data)
     }
 }
 
-//----------------mqtt publish------------------------------------------------------
+//----------------mqtt publish end------------------------------------------------------
 
 void parse_device_online_offline(const void *data)
 {

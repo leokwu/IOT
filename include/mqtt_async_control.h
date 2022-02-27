@@ -11,10 +11,14 @@ extern "C" {
 #include <common.h>
 
 #define ONLINE_TOPIC                "/device_online_status"
-#define VOLTAGE_CURRENT_TOPIC       "/device_voltage_current"
-#define POWER_CONSUMPTION_TOPIC     "/device_power_consumption"
-#define SOFT_LABEL_TOPIC            "/device_soft_label"
-#define SWITCH_CONTROL_TOPIC         "/device_switch_control"
+//#define VOLTAGE_CURRENT_TOPIC       "/device_voltage_current"
+//#define POWER_CONSUMPTION_TOPIC     "/device_power_consumption"
+//#define SOFT_LABEL_TOPIC            "/device_soft_label"
+//#define SWITCH_CONTROL_TOPIC        "/device_switch_control"
+
+#define REPORT_PROPERTIES_TOPIC      "/report-property"
+#define TAGS_TOPIC                   "/tags"
+#define INVOKE_FUNCTION_TOPIC        "/invoke-function"
 
 int mqttMainProcess();
 void mqttMessagePublish(const char* topic, void *payload);
