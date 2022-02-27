@@ -453,7 +453,7 @@ void parse_cloud_switch(const void *data)
         }
     }
 
-#if 1
+#if 0
     cJSON *messageId = cJSON_GetObjectItem(json_root, "messageId");
     if (NULL == messageId) {
         printf("messageId node not exist\n");
