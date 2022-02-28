@@ -229,34 +229,7 @@ void inbvokeFunctionSubscribe()
 
 void onConnect(void* context, MQTTAsync_successData* response)
 {
-
-
     inbvokeFunctionSubscribe();
-
-#if 0
-    cJSON *root = cJSON_CreateObject();
-    cJSON *properties = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "messageId", "1495712770145988608");
-    cJSON_AddStringToObject(root, "deviceId", "100000001");
-    cJSON_AddStringToObject(root, "timestamp", "1584417135000");
-    cJSON_AddBoolToObject(root, "success", true);
-
-    cJSON_AddStringToObject(properties, "temp", "40");
-    cJSON_AddItemToObject(root, "properties", properties);
-
-    char *cjson = cJSON_Print(root);
-    printf("json:%s\n", cjson1);
-    mqttMessagePublish(SUBSCRIBE_TOPIC, cjson);
-
-
-    if (root != NULL) {
-        cJSON_Delete(root);
-    }
-
-    if (cjson != NULL) {
-        free(cjson1);
-    }
-#endif
 }
 
 
