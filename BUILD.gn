@@ -18,7 +18,6 @@ config("coordinator_config") {
   include_dirs = [ "include" ]
   cflags = [
   ]
-#  ldflags += [ "-lpthread" ]
 }
 
 ohos_executable("coordinator_process") {                                                                                                                                                   

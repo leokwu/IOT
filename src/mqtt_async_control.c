@@ -73,7 +73,8 @@ void onSendFailure(void* context, MQTTAsync_failureData* response)
 	if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start disconnect, return code %d\n", rc);
-		exit(EXIT_FAILURE);
+        g_finished = 1;
+//		exit(EXIT_FAILURE);
 	}
 }
 
@@ -133,7 +134,8 @@ void mqttMessagePublish(const char* topic, void *payload)
     if ((rc = MQTTAsync_sendMessage(client, topic, &pubmsg, &opts)) != MQTTASYNC_SUCCESS)
     {
         printf("Failed to start sendMessage, return code %d\n", rc);
-        exit(EXIT_FAILURE);
+        g_finished = 1;
+//        exit(EXIT_FAILURE);
     }
 }
 
@@ -279,7 +281,8 @@ void mqttDisconnect()
     if ((rc = MQTTAsync_disconnect(client, &opts)) != MQTTASYNC_SUCCESS)
     {
         printf("Failed to start disconnect, return code %d\n", rc);
-        exit(EXIT_FAILURE);
+        g_finished = 1;
+//        exit(EXIT_FAILURE);
     }
 }
 
@@ -289,21 +292,24 @@ int mqttMainProcess()
 	MQTTAsync client;
 	MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
 	int rc;
-    int ch;
 
     g_finished = 0;
 
 	if ((rc = MQTTAsync_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to create client object, return code %d\n", rc);
-		exit(EXIT_FAILURE);
+        rc = EXIT_FAILURE;
+        goto exit;
+//		exit(EXIT_FAILURE);
 	}
     g_client = client;
 
 	if ((rc = MQTTAsync_setCallbacks(client, NULL, connlost, messageArrived, NULL)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to set callback, return code %d\n", rc);
-		exit(EXIT_FAILURE);
+        rc = EXIT_FAILURE;
+        goto destroy_exit;
+//		exit(EXIT_FAILURE);
 	}
 
 	conn_opts.keepAliveInterval = 20;
@@ -316,23 +322,34 @@ int mqttMainProcess()
 	if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start connect, return code %d\n", rc);
-		exit(EXIT_FAILURE);
+        rc = EXIT_FAILURE;
+        goto destroy_exit;
+//		exit(EXIT_FAILURE);
 	}
 
+#if 0
+    int ch;
     do
     {
         ch = getchar();
         usleep(10000L);
     } while (ch!='Q' && ch != 'q');
 
+#endif
 
 	while (!g_finished) {
         usleep(10000L);
 	}
 
+    if (g_finished)
+        goto exit;
+
     mqttDisconnect();
+
+destroy_exit:
     freeClient(client);
 
+exit:
  	return rc;
 }
 
