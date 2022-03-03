@@ -7,7 +7,7 @@
 #include <endian.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <cjson/cJSON.h>
+#include <cJSON.h>
 
 #include "message_control.h"
 #include "device_manager.h"
@@ -65,7 +65,7 @@ static void onlinePublish(void *data)
     OnlinePublish* online_publish = (OnlinePublish*) data;
 
     cJSON *item = cJSON_CreateObject();
-    cJSON_AddStringToObject(item, "deviceId", online_publish->deviceid);
+    cJSON_AddStringToObject(item, "deviceId", (const char*)online_publish->deviceid);
     cJSON_AddStringToObject(item, "status", online_publish->status);
 
     char *cjson = cJSON_Print(item);
@@ -92,7 +92,7 @@ static void voltageCurrentPublish(void *data)
 
     cJSON *item = cJSON_CreateObject();
     cJSON *properties = cJSON_CreateObject();
-    cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
+    cJSON_AddStringToObject(item, "deviceId", (const char*)publish->deviceid);
     cJSON_AddStringToObject(properties, "voltage", publish->voltage);
     cJSON_AddStringToObject(properties, "current", publish->current);
     cJSON_AddItemToObject(item, "properties", properties);
@@ -120,7 +120,7 @@ static void powerConsumptionPublish(void *data)
 
     cJSON *item = cJSON_CreateObject();
     cJSON *properties = cJSON_CreateObject();
-    cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
+    cJSON_AddStringToObject(item, "deviceId", (const char*)publish->deviceid);
     cJSON_AddStringToObject(properties, "powerConsumption", publish->power);
     cJSON_AddItemToObject(item, "properties", properties);
 
@@ -148,7 +148,7 @@ static void softLabelPublish(void *data)
 
     cJSON *item = cJSON_CreateObject();
     cJSON *tags = cJSON_CreateObject();
-    cJSON_AddStringToObject(item, "deviceId", publish->deviceid);
+    cJSON_AddStringToObject(item, "deviceId", (const char*)publish->deviceid);
     cJSON_AddStringToObject(tags, "mac", publish->mac);
     cJSON_AddItemToObject(item, "tags", tags);
 
@@ -181,7 +181,7 @@ void parse_device_online_offline(const void *data)
     printf("%s, key: %d vlength: %d value: %d\n", __func__ , key, vlength, value);
 
     OnlinePublish publish = {0};
-    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -215,7 +215,7 @@ void parse_device_data_upload(const void *data)
     printf("%s, key: %d vlength: %d voltage: %d V, current: %d mA\n", __func__ , key, vlength, voltage, current);
 
     VCPublish publish = {0};
-    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -249,7 +249,7 @@ void parse_device_power_consumption(const void *data)
     printf("%s, key: %d vlength: %d power_consumption: %d\n", __func__ , key, vlength, power_consumption);
 
     PCPublish publish = {0};
-    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -293,7 +293,7 @@ void parse_device_soft_label(const void *data)
     printf("%s, key: %d vlength: %d mac: %s\n", __func__ , key, vlength, mac);
 
     SLPublish publish = {0};
-    snprintf(publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+    snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
              payload->id[0],
              payload->id[1],
              payload->id[2],
@@ -328,8 +328,9 @@ void get_short_addr(const void* data)
     memcpy(mac, data, sizeof(mac));
     char send_buff[12] = {0xFE, 0x09, 0x10, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], 0xFF};
     printf("get_short_addr send_buff: \n");
-    dumpData_leok(send_buff, sizeof(send_buff));
+    dumpData_leok((const unsigned char*)send_buff, sizeof(send_buff));
     int bytes = serialWrite(send_buff, sizeof(send_buff));
+    printf("get_short_addr serialWrite bytes: %d\n", bytes);
     sleep(3);
 }
 
@@ -343,7 +344,7 @@ static void writeSwitchControl(const void *data)
 
     switchControl *swicth_control = (switchControl *)data;
     printf("%s: dump switchControl\n", __func__ );
-    dumpData_leok(swicth_control->deviceid, sizeof(swicth_control->deviceid));
+    dumpData_leok((const unsigned char*)swicth_control->deviceid, sizeof(swicth_control->deviceid));
     printf("swicth_control->control: %d\n", swicth_control->control);
 
     int ret = -1;
@@ -380,7 +381,7 @@ static void writeSwitchControl(const void *data)
     switch_package.vlength = 1;
     switch_package.value = swicth_control->control;
 
-    printf("sizeof(switch_package): %ld\n", sizeof(switch_package));
+    printf("sizeof(switch_package): %u\n", sizeof(switch_package));
     int bytes = serialWrite((const char *)&switch_package, sizeof(switch_package));
     printf("writeData bytes: %d\n", bytes);
 }

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <cjson/cJSON.h>
+#include <cJSON.h>
 #include <MQTTAsync.h>
 #include <unistd.h>
 
@@ -162,7 +162,7 @@ void mqttMessageSubscribe(const char* topic)
     }
 }
 
-
+#if 0
 static void onlinePublish() // for test
 {
     cJSON *item = cJSON_CreateObject();
@@ -181,6 +181,7 @@ static void onlinePublish() // for test
         free(cjson);
     }
 }
+#endif
 
 void discoveryPublish()
 {

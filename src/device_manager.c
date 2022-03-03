@@ -2,7 +2,7 @@
 // Created by leok on 2022/2/9.
 //
 
-#include <cjson/cJSON.h>
+#include <cJSON.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -50,7 +50,7 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
 
 const char * base64char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const char padding_char = '=';
-int base64encode(const uint8_t *sourcedata, size_t srclen, char *base64) {
+static int base64encode(const uint8_t *sourcedata, size_t srclen, char *base64) {
     int i=0, j=0;
     unsigned char trans_index=0;
     const int datalength = srclen;
@@ -105,7 +105,7 @@ static const unsigned char pr2six[256] = {
 };
 
 
-long base64decode(uint8_t *bufplain, const uint8_t *bufcoded) {
+static long base64decode(uint8_t *bufplain, const void *bufcoded) {
     long nbytesdecoded;
     const unsigned char *bufin;
     unsigned char *bufout;
@@ -149,7 +149,7 @@ long base64decode(uint8_t *bufplain, const uint8_t *bufcoded) {
     return nbytesdecoded;
 }
 
-
+#if 0
 static void printJsonObjvalue(const cJSON *json) {
     if (NULL == json) {
         printf("NULL object!\n");
@@ -183,7 +183,7 @@ static void printJsonObjvalue(const cJSON *json) {
             break;
     }
 }
-
+#endif
 
 static void freeJson(cJSON *json) {
     if (json != NULL) {
@@ -221,7 +221,7 @@ static cJSON* readJsonFile(char *fileName) {
     }
     
     printf("readJsonFile data:%s\n", data);
-    cJSON *json_root = cJSON_Parse(data);
+    cJSON *json_root = cJSON_Parse((const char *)data);
     if (NULL == json_root) {
         printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());
     }
@@ -281,7 +281,7 @@ static int firstAddDevice(void *data)
     base64encode(device_info->mac, sizeof(device_info->mac), transit);
     cJSON_AddStringToObject(item, "device_mac", transit);
 
-    uint8_t label[64] = {0};
+    char label[64] = {0};
     snprintf(label, sizeof(label), "%02x%02x%02x%02x%02x%02x%02x%02x",
              device_info->id[0],
              device_info->id[1],
@@ -310,7 +310,7 @@ static int insertDevice(void *data)
     cJSON *root = readJsonFile(DEVICE_LIST_FILE);
 
     DeviceInfo *device_info = (DeviceInfo *)data;
-    uint8_t label[64] = {0};
+    char label[64] = {0};
     snprintf(label, sizeof(label), "%02x%02x%02x%02x%02x%02x%02x%02x",
              device_info->id[0],
              device_info->id[1],

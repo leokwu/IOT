@@ -40,38 +40,40 @@ typedef struct SwitchPackage {
 } SwitchPackage;
 
 
-#pragma pack(1)
+// #pragma pack(1)
 typedef struct OnlinePublish {
     uint8_t deviceid[64];
     char status[2];
 } OnlinePublish;
 
 
-#pragma pack(1)
+// #pragma pack(1)
 typedef struct VCPublish {
     uint8_t deviceid[64];
     char voltage[8];
     char current[8];
 } VCPublish;
 
-#pragma pack(1)
+// #pragma pack(1)
 typedef struct PCPublish {
     uint8_t deviceid[64];
     char power[8];
 } PCPublish;
 
 
-#pragma pack(1)
+// #pragma pack(1)
 typedef struct SLPublish {
     uint8_t deviceid[64];
     char mac[32];
 } SLPublish;
 
-#pragma pack(1)
+// #pragma pack(1)
 typedef struct switchControl {
     char deviceid[64];
     int control;
 } switchControl;
+
+#pragma pack()
 
 #ifdef __cplusplus
 }

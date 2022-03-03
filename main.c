@@ -81,7 +81,7 @@ void *recvSerialDataThread(void *arg)
                 if (recv_len > 0) {
                     printf("serialRead start=====================================================\n");
                     printf("recv_len :%d\n", recv_len);
-                    dumpData(buff, recv_len);
+                    dumpData((const unsigned char *)buff, recv_len);
                     int head = (int)(buff[0] & 0xFF);
                     printf("head: %02x\n", head);
                     if (head == 0xFB && recv_len == 3) {

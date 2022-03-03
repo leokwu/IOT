@@ -26,7 +26,7 @@ typedef struct PayloadPackage {
     uint8_t  message[];
 } PayloadPackage;
 
-#pragma pack(1)
+//#pragma pack(1)
 typedef struct MessagePackage {
     uint32_t key;
     uint8_t vlength;
@@ -35,7 +35,7 @@ typedef struct MessagePackage {
 
 
 
-#pragma pack(1)
+//#pragma pack(1)
 typedef struct DeviceInfo {
     uint8_t id[4];
     uint8_t pid[2];
@@ -44,7 +44,7 @@ typedef struct DeviceInfo {
 } DeviceInfo;
 
 
-#pragma pack(1)
+//#pragma pack(1)
 typedef struct PublishArrived {
     uint32_t function;
     char message[ARRIVED_MESSAGE_LEN];
@@ -91,6 +91,7 @@ enum device_error {
 
 };
 
+#pragma pack()
 
 #ifdef __cplusplus
 }

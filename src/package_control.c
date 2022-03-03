@@ -3,7 +3,7 @@
 //
 
 #include <endian.h>
-#include <cjson/cJSON.h>
+#include <cJSON.h>
 
 #include "package_control.h"
 #include "message_control.h"
@@ -11,6 +11,7 @@
 
 #define SWITCH_FUNCTION "switch"
 
+#if 0
 static void dumpData_leok(const unsigned char *buf, size_t length) {
     printf("leok----dump data: ");
     int n = 0;
@@ -41,6 +42,8 @@ static void dumpData_leok(const unsigned char *buf, size_t length) {
     }
     printf("\n");
 }
+#endif
+
 
 // device-----------------------------------------------------------
 typedef void (*parse_device_message_func)(const void *data);
