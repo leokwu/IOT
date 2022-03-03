@@ -410,6 +410,10 @@ void parse_cloud_switch(const void *data)
         goto FREE_JSON;
     }
     printf("deviceId->valuestring: %s\n", deviceId->valuestring);
+    if (NULL == deviceId->valuestring){
+        printf("deviceId->valuestring NULL\n");
+        goto FREE_JSON;
+    }
     memcpy(swicth_control.deviceid, deviceId->valuestring, sizeof(swicth_control.deviceid));
 
     cJSON *function = cJSON_GetObjectItem(json_root, "function");
@@ -441,6 +445,10 @@ void parse_cloud_switch(const void *data)
             goto FREE_JSON;
         }
         printf("name->valuestring: %s\n", name->valuestring);
+        if (NULL == name->valuestring){
+            printf("name->valuestring NULL\n");
+            goto FREE_JSON;
+        }
 
         if (0 == strncmp(name->valuestring, "switch", sizeof("switch"))) {
             cJSON *value = cJSON_GetObjectItem(sub, "value");
@@ -449,6 +457,10 @@ void parse_cloud_switch(const void *data)
                 goto FREE_JSON;
             }
             printf("value->valuestring: %s\n", value->valuestring);
+            if (NULL == value->valuestring){
+                printf("value->valuestring NULL\n");
+                goto FREE_JSON;
+            }
             swicth_control.control = atoi(value->valuestring);
             writeSwitchControl((void *)&swicth_control);
         }
@@ -461,6 +473,10 @@ void parse_cloud_switch(const void *data)
         goto FREE_JSON;
     }
     printf("messageId->valuestring: %s\n", messageId->valuestring);
+    if (NULL == messageId->valuestring){
+        printf("messageId->valuestring NULL\n");
+        goto FREE_JSON;
+    }
 #endif
 
 

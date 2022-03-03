@@ -149,6 +149,11 @@ uint32_t get_function_type(void *data) {
         goto FREE_JSON;
     }
     printf("function->valuestring: %s\n", function->valuestring);
+    if (NULL == function->valuestring){
+        printf("function->valuestring NULL\n");
+        goto FREE_JSON;
+    }
+
     if( 0 == strncmp(function->valuestring, SWITCH_FUNCTION, sizeof(SWITCH_FUNCTION)) ) {
         ret = CLOUD_SWITCH_CONTROL;
         goto FREE_JSON;
