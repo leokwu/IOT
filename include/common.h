@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 #define ARRIVED_MESSAGE_LEN 2048
+#define HOMEASSISTANT_ENABLE 1
 
 #pragma pack(1)
 typedef struct PayloadPackage {
@@ -47,6 +48,9 @@ typedef struct DeviceInfo {
 //#pragma pack(1)
 typedef struct PublishArrived {
     uint32_t function;
+#if HOMEASSISTANT_ENABLE
+    char deviceid[64];
+#endif
     char message[ARRIVED_MESSAGE_LEN];
 } PublishArrived;
 

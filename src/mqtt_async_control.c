@@ -13,18 +13,20 @@
 #include "mqtt_async_control.h"
 #include "package_control.h"
 
-#define ADDRESS             "tcp://218.104.230.76:17124"
-//#define ADDRESS           "tcp://10.10.10.10:1883"
+#if !HOMEASSISTANT_ENABLE
+    #define ADDRESS             "tcp://218.104.230.76:17124"
+    #define USENAME              "hm"
+    #define PASSWORD             "IpYMEneM6K"
+#else
+    #define ADDRESS           "tcp://10.10.10.10:1883"
+#endif
+
 #define CLIENTID            "toybrick"
-#define DISCOVERY_TOPIC      "homeassistant/sensor/device1/config"
 
 #define QOS                  1
 #define TIMEOUT              10000L
 
-#define USENAME              "hm"
-#define PASSWORD             "IpYMEneM6K"
-
-int g_finished = 0;
+static int g_finished = 0;
 
 MQTTAsync g_client;
 
@@ -196,7 +198,7 @@ void discoveryPublish()
     char *cjson = cJSON_Print(item);
     printf("%s: json:%s\n", __func__ , cjson);
 
-    mqttMessagePublish(DISCOVERY_TOPIC, cjson);
+    mqttMessagePublish(DISCOVERY_CONFIG_TOPIC, cjson);
 
     freeJson(item);
 
@@ -229,10 +231,16 @@ void inbvokeFunctionSubscribe()
     mqttMessageSubscribe(INVOKE_FUNCTION_TOPIC);
 }
 
+void commandGatherSubscribe()
+{
+    mqttMessageSubscribe(COMMAND_GATHER_TOPIC);
+}
+
 
 void onConnect(void* context, MQTTAsync_successData* response)
 {
     inbvokeFunctionSubscribe();
+    commandGatherSubscribe();
 }
 
 
@@ -317,8 +325,12 @@ int mqttMainProcess()
 	conn_opts.onSuccess = onConnect;
 	conn_opts.onFailure = onConnectFailure;
 	conn_opts.context = client;
+
+#if !HOMEASSISTANT_ENABLE
 	conn_opts.username = USENAME;
     conn_opts.password = PASSWORD;
+#endif
+
 	if ((rc = MQTTAsync_connect(client, &conn_opts)) != MQTTASYNC_SUCCESS)
 	{
 		printf("Failed to start connect, return code %d\n", rc);

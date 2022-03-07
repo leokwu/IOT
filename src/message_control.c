@@ -15,6 +15,8 @@
 #include "mqtt_async_control.h"
 
 static uint8_t g_short_addr[3] = {0};
+#define ON  "ON"
+#define OFF "OFF"
 
 static void dumpData_leok(const unsigned char *buf, size_t length) {
     printf("leok----dump data: ");
@@ -64,6 +66,29 @@ static void onlinePublish(void *data)
 
     OnlinePublish* online_publish = (OnlinePublish*) data;
 
+#if HOMEASSISTANT_ENABLE
+    cJSON *item = cJSON_CreateObject();
+    char transmit[128] = {0};
+
+    cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/switch/%s/set", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "command_topic", transmit);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/switch/%s/state", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "state_topic", transmit);
+
+    char *cjson = cJSON_Print(item);
+    printf("json:%s\n", cjson);
+
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "homeassistant/switch/%s/config", (const char*)online_publish->deviceid);
+    mqttMessagePublish(transmit, cjson);
+
+#else
     cJSON *item = cJSON_CreateObject();
     cJSON_AddStringToObject(item, "deviceId", (const char*)online_publish->deviceid);
     cJSON_AddStringToObject(item, "status", online_publish->status);
@@ -72,6 +97,7 @@ static void onlinePublish(void *data)
     printf("json:%s\n", cjson);
 
     mqttMessagePublish(ONLINE_TOPIC, cjson);
+#endif
 
     freeJson(item);
 
@@ -79,6 +105,30 @@ static void onlinePublish(void *data)
         free(cjson);
     }
 }
+
+#if HOMEASSISTANT_ENABLE
+static void switchStatePublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    switchControl *swicth_control = (switchControl *)data;
+    char transmit[128] = {0};
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/switch/%s/state", (const char*)swicth_control->deviceid);
+    if (0 == swicth_control->control) {
+        mqttMessagePublish(transmit, OFF);
+    } else if (1 == swicth_control->control) {
+        mqttMessagePublish(transmit, ON);
+    } else {
+        printf("switchStatePublish swicth_control->control not 0/1 state\n");
+        return;
+    }
+
+}
+#endif
 
 
 static void voltageCurrentPublish(void *data)
@@ -381,7 +431,7 @@ static void writeSwitchControl(const void *data)
     switch_package.vlength = 1;
     switch_package.value = swicth_control->control;
 
-    printf("sizeof(switch_package): %u\n", sizeof(switch_package));
+    printf("sizeof(switch_package): %lu\n", sizeof(switch_package));
     int bytes = serialWrite((const char *)&switch_package, sizeof(switch_package));
     printf("writeData bytes: %d\n", bytes);
 }
@@ -398,6 +448,22 @@ void parse_cloud_switch(const void *data)
     PublishArrived *pb_arrived = (PublishArrived *)data;
     switchControl swicth_control ={0};
 
+#if HOMEASSISTANT_ENABLE
+    OnlinePublish publish = {0};
+
+    if ( 0 == strncmp(pb_arrived->message, ON, sizeof(ON)) ) {
+        swicth_control.control = 1;
+    } else if(0 == strncmp(pb_arrived->message, OFF, sizeof(OFF))) {
+        swicth_control.control = 0;
+    } else {
+        printf("homeassistant switch set message not ON/OFF\n");
+        return;
+    }
+    memcpy(swicth_control.deviceid, pb_arrived->deviceid, sizeof(swicth_control.deviceid));
+    writeSwitchControl((void *)&swicth_control);
+    switchStatePublish((void *)&swicth_control);
+
+#else
     cJSON *json_root = cJSON_Parse(pb_arrived->message);
     if (NULL == json_root) {
         printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());
@@ -483,7 +549,7 @@ void parse_cloud_switch(const void *data)
 FREE_JSON:
 
     freeJson(json_root);
-
+#endif // HOMEASSISTANT_ENABLE
 }
 
 

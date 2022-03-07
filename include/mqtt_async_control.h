@@ -20,6 +20,9 @@ extern "C" {
 #define TAGS_TOPIC                   "/tags"
 #define INVOKE_FUNCTION_TOPIC        "/invoke-function"
 
+#define DISCOVERY_CONFIG_TOPIC      "homeassistant/switch/leok/config"
+#define COMMAND_GATHER_TOPIC        "toybrick/switch/+/set"
+
 int mqttMainProcess();
 void mqttMessagePublish(const char* topic, void *payload);
 void mqttMessageSubscribe(const char* topic);

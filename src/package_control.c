@@ -4,6 +4,7 @@
 
 #include <endian.h>
 #include <cJSON.h>
+#include <stdbool.h>
 
 #include "package_control.h"
 #include "message_control.h"
@@ -133,7 +134,29 @@ int32_t deserialize_cloud_message(const void *data)
 
 
 
-uint32_t get_function_type(void *data) {
+#if HOMEASSISTANT_ENABLE
+static bool check_switch_set(char *pcBuf, char *pcRes)
+{
+    char *pcBegin = NULL;
+    char *pcEnd = NULL;
+ 
+    pcBegin = strstr(pcBuf, "toybrick/switch/");
+    pcEnd = strstr(pcBuf, "/set");
+ 
+    if(pcBegin == NULL || pcEnd == NULL || pcBegin > pcEnd)
+    {
+        printf("deviceid not found!\n");
+        return false;
+    } else {
+        pcBegin += strlen("toybrick/switch/");
+        memcpy(pcRes, pcBegin, pcEnd - pcBegin);
+    }
+ 
+    return true;
+}
+
+#else
+static uint32_t get_function_type(void *data) {
 
     cJSON *json_root = cJSON_Parse(data);
     if (NULL == json_root) {
@@ -172,6 +195,7 @@ FREE_JSON:
 
     return ret;
 }
+#endif
 
 int32_t deserialize_cloud_package(char* topicName, int topicLen, int payloadlen, void *payload)
 {
@@ -182,6 +206,19 @@ int32_t deserialize_cloud_package(char* topicName, int topicLen, int payloadlen,
 
     uint32_t ret = 0;
 
+#if HOMEASSISTANT_ENABLE
+    //TODO:
+    char device_id[64] = {0};
+    bool is_switch = check_switch_set(topicName, device_id);
+    if (is_switch && NULL != device_id) {
+        printf("device_id: %s\n", device_id);
+        PublishArrived pb_arrived = {0};
+        pb_arrived.function = CLOUD_SWITCH_CONTROL;
+        memcpy(pb_arrived.deviceid, (char*)device_id, sizeof(pb_arrived.deviceid));
+        memcpy(pb_arrived.message, (char*)payload, sizeof(pb_arrived.message));
+        ret = deserialize_cloud_message((void*)&pb_arrived);
+    }
+#else
     if( 0 == strncmp(topicName, INVOKE_FUNCTION_TOPIC, topicLen) ) {
         if (payloadlen > ARRIVED_MESSAGE_LEN) {
             printf("message->payloadlen: %d > ARRIVED_MESSAGE_LEN: %d\n", payloadlen, ARRIVED_MESSAGE_LEN);
@@ -196,6 +233,7 @@ int32_t deserialize_cloud_package(char* topicName, int topicLen, int payloadlen,
             ret = deserialize_cloud_message((void*)&pb_arrived);
         }
     }
+#endif
     return ret;
 }
 
