@@ -40,6 +40,8 @@ void connlost(void *context, char *cause)
 	printf("\nConnection lost\n");
 	printf("     cause: %s\n", cause);
 
+    g_finished = 1;
+    return;
 	printf("Reconnecting\n");
 	conn_opts.keepAliveInterval = 20;
 	conn_opts.cleansession = 1;

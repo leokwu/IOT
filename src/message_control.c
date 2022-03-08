@@ -201,6 +201,8 @@ static void energySensorDiscovery(void *data)
     cJSON_AddStringToObject(item, "device_class", "energy");
     cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
 
+    cJSON_AddStringToObject(item, "state_class", "total_increasing");
+
     cJSON_AddStringToObject(item, "platform", "mqtt");
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "%s-energy", (const char*)online_publish->deviceid);
