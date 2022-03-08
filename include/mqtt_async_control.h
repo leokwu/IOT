@@ -10,6 +10,7 @@ extern "C" {
 
 #include <common.h>
 
+//-------中电福富--------------------------    
 #define ONLINE_TOPIC                "/device_online_status"
 //#define VOLTAGE_CURRENT_TOPIC       "/device_voltage_current"
 //#define POWER_CONSUMPTION_TOPIC     "/device_power_consumption"
@@ -20,6 +21,7 @@ extern "C" {
 #define TAGS_TOPIC                   "/tags"
 #define INVOKE_FUNCTION_TOPIC        "/invoke-function"
 
+//-------toybrick homeassistant--------------
 #define DISCOVERY_CONFIG_TOPIC      "homeassistant/switch/leok/config"
 #define COMMAND_GATHER_TOPIC        "toybrick/switch/+/set"
 

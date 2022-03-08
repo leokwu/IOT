@@ -57,7 +57,10 @@ static void freeJson(cJSON *json) {
 }
 
 //----------------mqtt publish start------------------------------------------------------
-static void onlinePublish(void *data)
+
+#if HOMEASSISTANT_ENABLE
+
+static void switchDiscovery(void *data)
 {
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
@@ -66,7 +69,6 @@ static void onlinePublish(void *data)
 
     OnlinePublish* online_publish = (OnlinePublish*) data;
 
-#if HOMEASSISTANT_ENABLE
     cJSON *item = cJSON_CreateObject();
     char transmit[128] = {0};
 
@@ -88,7 +90,156 @@ static void onlinePublish(void *data)
     snprintf(transmit, sizeof(transmit), "homeassistant/switch/%s/config", (const char*)online_publish->deviceid);
     mqttMessagePublish(transmit, cjson);
 
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+static void currentSensorDiscovery(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    OnlinePublish* online_publish = (OnlinePublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    char transmit[128] = {0};
+
+    cJSON_AddStringToObject(item, "device_class", "current");
+    cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-VA/state", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "state_topic", transmit);
+
+    cJSON_AddStringToObject(item, "unit_of_measurement", "A");
+    cJSON_AddStringToObject(item, "value_template", "{{value_json.current}}");
+
+    char *cjson = cJSON_Print(item);
+    printf("current json:%s\n", cjson);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "homeassistant/sensor/%s-A/config", (const char*)online_publish->deviceid);
+    mqttMessagePublish(transmit, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+static void voltageSensorDiscovery(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    OnlinePublish* online_publish = (OnlinePublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    char transmit[128] = {0};
+
+    cJSON_AddStringToObject(item, "device_class", "voltage");
+    cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-VA/state", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "state_topic", transmit);
+
+    cJSON_AddStringToObject(item, "unit_of_measurement", "V");
+    cJSON_AddStringToObject(item, "value_template", "{{value_json.voltage}}");
+
+    char *cjson = cJSON_Print(item);
+    printf("voltage json:%s\n", cjson);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "homeassistant/sensor/%s-V/config", (const char*)online_publish->deviceid);
+    mqttMessagePublish(transmit, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+
+static void energySensorDiscovery(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    OnlinePublish* online_publish = (OnlinePublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    char transmit[128] = {0};
+
+    cJSON_AddStringToObject(item, "device_class", "energy");
+    cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-kWh/state", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "state_topic", transmit);
+
+    cJSON_AddStringToObject(item, "unit_of_measurement", "kWh");
+    cJSON_AddStringToObject(item, "value_template", "{{value_json.energy}}");
+
+    char *cjson = cJSON_Print(item);
+    printf("energy json:%s\n", cjson);
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "homeassistant/sensor/%s-kWh/config", (const char*)online_publish->deviceid);
+    mqttMessagePublish(transmit, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+
+
+static void multiSensorsDiscovery(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    currentSensorDiscovery(data);
+    voltageSensorDiscovery(data);
+    energySensorDiscovery(data);
+
+}
+#endif
+
+static void onlinePublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+
+
+#if HOMEASSISTANT_ENABLE
+
+    switchDiscovery(data);
+    multiSensorsDiscovery(data);
+
 #else
+
+    OnlinePublish* online_publish = (OnlinePublish*) data;
     cJSON *item = cJSON_CreateObject();
     cJSON_AddStringToObject(item, "deviceId", (const char*)online_publish->deviceid);
     cJSON_AddStringToObject(item, "status", online_publish->status);
@@ -97,13 +248,15 @@ static void onlinePublish(void *data)
     printf("json:%s\n", cjson);
 
     mqttMessagePublish(ONLINE_TOPIC, cjson);
-#endif
 
     freeJson(item);
 
     if (cjson != NULL) {
         free(cjson);
     }
+#endif
+
+
 }
 
 #if HOMEASSISTANT_ENABLE
@@ -128,11 +281,77 @@ static void switchStatePublish(void *data)
     }
 
 }
+
+static void voltageCurrentSensorPublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    VCPublish* publish = (VCPublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+
+    printf("publish->voltage: %s, atof(publish->voltage): %f\n", publish->voltage, atof(publish->voltage));
+    printf("publish->current: %s, atof(publish->current): %f\n", publish->current, atof(publish->current));
+    cJSON_AddNumberToObject(item, "voltage", atof(publish->voltage));
+    cJSON_AddNumberToObject(item, "current", atof(publish->current)/1000);
+
+    char *cjson = cJSON_Print(item);
+    printf("voltageCurrentSensorPublish json:%s\n", cjson);
+
+    char transmit[128] = {0};
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-VA/state", (const char*)publish->deviceid);
+    mqttMessagePublish(transmit, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
+
+static void energySensorPublish(void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    PCPublish* publish = (PCPublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON_AddNumberToObject(item, "energy", atof(publish->power)/1000);
+
+    char *cjson = cJSON_Print(item);
+    printf("energySensorPublish json:%s\n", cjson);
+
+    char transmit[128] = {0};
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-kWh/state", (const char*)publish->deviceid);
+    mqttMessagePublish(transmit, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+}
+
 #endif
 
 
 static void voltageCurrentPublish(void *data)
 {
+
+
+#if HOMEASSISTANT_ENABLE
+    voltageCurrentSensorPublish(data);
+#else
+
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
         return;
@@ -157,10 +376,14 @@ static void voltageCurrentPublish(void *data)
     if (cjson != NULL) {
         free(cjson);
     }
+#endif
 }
 
 static void powerConsumptionPublish(void *data)
 {
+#if HOMEASSISTANT_ENABLE
+    energySensorPublish(data);
+#else
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
         return;
@@ -184,6 +407,7 @@ static void powerConsumptionPublish(void *data)
     if (cjson != NULL) {
         free(cjson);
     }
+#endif
 }
 
 
