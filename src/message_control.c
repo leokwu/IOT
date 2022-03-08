@@ -73,6 +73,11 @@ static void switchDiscovery(void *data)
     char transmit[128] = {0};
 
     cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "platform", "mqtt");
+
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%s-switch", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "unique_id", transmit);
 
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "toybrick/switch/%s/set", (const char*)online_publish->deviceid);
@@ -113,6 +118,11 @@ static void currentSensorDiscovery(void *data)
     cJSON_AddStringToObject(item, "device_class", "current");
     cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
 
+    cJSON_AddStringToObject(item, "platform", "mqtt");
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%s-current", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "unique_id", transmit);
+
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-VA/state", (const char*)online_publish->deviceid);
     cJSON_AddStringToObject(item, "state_topic", transmit);
@@ -148,6 +158,11 @@ static void voltageSensorDiscovery(void *data)
 
     cJSON_AddStringToObject(item, "device_class", "voltage");
     cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+
+    cJSON_AddStringToObject(item, "platform", "mqtt");
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%s-voltage", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "unique_id", transmit);
 
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-VA/state", (const char*)online_publish->deviceid);
@@ -185,6 +200,11 @@ static void energySensorDiscovery(void *data)
 
     cJSON_AddStringToObject(item, "device_class", "energy");
     cJSON_AddStringToObject(item, "name", (const char*)online_publish->deviceid);
+
+    cJSON_AddStringToObject(item, "platform", "mqtt");
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%s-energy", (const char*)online_publish->deviceid);
+    cJSON_AddStringToObject(item, "unique_id", transmit);
 
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "toybrick/sensor/%s-kWh/state", (const char*)online_publish->deviceid);
