@@ -20,7 +20,7 @@ config("coordinator_config") {
   ]
 }
 
-ohos_executable("coordinator_process") {                                                                                                                                                   
+ohos_executable("coordinator_service") {                                                                                                                                                   
   install_enable = true
 
   sources = [
