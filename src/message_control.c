@@ -677,7 +677,7 @@ static void writeSwitchControl(const void *data)
     switch_package.vlength = 1;
     switch_package.value = swicth_control->control;
 
-    printf("sizeof(switch_package): %lu\n", sizeof(switch_package));
+//    printf("sizeof(switch_package): %lu\n", sizeof(switch_package));
     int bytes = serialWrite((const char *)&switch_package, sizeof(switch_package));
     printf("writeData bytes: %d\n", bytes);
 }
@@ -695,7 +695,6 @@ void parse_cloud_switch(const void *data)
     switchControl swicth_control ={0};
 
 #if HOMEASSISTANT_ENABLE
-    OnlinePublish publish = {0};
 
     if ( 0 == strncmp(pb_arrived->message, ON, sizeof(ON)) ) {
         swicth_control.control = 1;

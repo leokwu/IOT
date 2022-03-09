@@ -210,7 +210,7 @@ int32_t deserialize_cloud_package(char* topicName, int topicLen, int payloadlen,
     //TODO:
     char device_id[64] = {0};
     bool is_switch = check_switch_set(topicName, device_id);
-    if (is_switch && NULL != device_id) {
+    if (is_switch) {
         printf("device_id: %s\n", device_id);
         PublishArrived pb_arrived = {0};
         pb_arrived.function = CLOUD_SWITCH_CONTROL;
