@@ -83,9 +83,9 @@ int32_t deserialize_uart_package(const void *data)
         printf("deserialize_uart_package data null\n");
         return PACKAGE_PTR_NULL;
     }
+#if 0 // FOR DEBUG
     //    auto payload = (PayloadPackage*) data;
     PayloadPackage* payload = (PayloadPackage*) data;
-#if 1 // FOR DEBUG
     uint16_t total = htobe16(payload->total);
     uint8_t id[4] = {0};
     memcpy(id, payload->id, 4);

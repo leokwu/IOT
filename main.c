@@ -69,7 +69,7 @@ void *recvSerialDataThread(void *arg)
 
     while(true) {
         struct timeval tv = {1, 0};
-        printf("fd: %d\n", g_fd);
+//        printf("fd: %d\n", g_fd);
         memset(buff, 0, buff_len);
         FD_ZERO(&recv_fd);
         FD_SET(g_fd, &recv_fd);

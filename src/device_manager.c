@@ -220,7 +220,7 @@ static cJSON* readJsonFile(char *fileName) {
         fclose(fp);
     }
     
-    printf("readJsonFile data:%s\n", data);
+//    printf("readJsonFile data:%s\n", data);
     cJSON *json_root = cJSON_Parse((const char *)data);
     if (NULL == json_root) {
         printf("cJSON_Parse error:%s\n", cJSON_GetErrorPtr());

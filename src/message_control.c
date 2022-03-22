@@ -131,7 +131,7 @@ static void currentSensorDiscovery(void *data)
     cJSON_AddStringToObject(item, "value_template", "{{value_json.current}}");
 
     char *cjson = cJSON_Print(item);
-    printf("current json:%s\n", cjson);
+//    printf("current json:%s\n", cjson);
 
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "homeassistant/sensor/%s-A/config", (const char*)online_publish->deviceid);
@@ -172,7 +172,7 @@ static void voltageSensorDiscovery(void *data)
     cJSON_AddStringToObject(item, "value_template", "{{value_json.voltage}}");
 
     char *cjson = cJSON_Print(item);
-    printf("voltage json:%s\n", cjson);
+//    printf("voltage json:%s\n", cjson);
 
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "homeassistant/sensor/%s-V/config", (const char*)online_publish->deviceid);
@@ -216,7 +216,7 @@ static void energySensorDiscovery(void *data)
     cJSON_AddStringToObject(item, "value_template", "{{value_json.energy}}");
 
     char *cjson = cJSON_Print(item);
-    printf("energy json:%s\n", cjson);
+//    printf("energy json:%s\n", cjson);
 
     memset(transmit, 0, sizeof(transmit));
     snprintf(transmit, sizeof(transmit), "homeassistant/sensor/%s-kWh/config", (const char*)online_publish->deviceid);
@@ -286,6 +286,11 @@ static void switchStatePublish(void *data)
 {
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    if (g_short_addr[1] == 0x00 && g_short_addr[2] == 0x00) {
+        printf("get shoet addr failed\n");
         return;
     }
 
@@ -507,7 +512,7 @@ void parse_device_data_upload(const void *data)
     uint8_t vlength = msg_pkg->vlength;
 
     uint8_t voltage = msg_pkg->value[0]; // V
-    uint16_t current = msg_pkg->value[1] << 8 | msg_pkg->value[2]; // mA
+    uint16_t current = msg_pkg->value[2] << 8 | msg_pkg->value[1]; // mA
     printf("%s, key: %d vlength: %d voltage: %d V, current: %d mA\n", __func__ , key, vlength, voltage, current);
 
     VCPublish publish = {0};
@@ -627,7 +632,7 @@ void get_short_addr(const void* data)
     dumpData_leok((const unsigned char*)send_buff, sizeof(send_buff));
     int bytes = serialWrite(send_buff, sizeof(send_buff));
     printf("get_short_addr serialWrite bytes: %d\n", bytes);
-    sleep(3);
+    sleep(1);
 }
 
 
@@ -654,6 +659,11 @@ static void writeSwitchControl(const void *data)
     memcpy(mac, select_device.mac, sizeof(mac));
     get_short_addr(mac);
 
+
+    if (g_short_addr[1] == 0x00 && g_short_addr[2] == 0x00) {
+        printf("get shoet addr failed\n");
+        return;
+    }
     SwitchPackage switch_package = {0};
 
     switch_package.head[0] = 0xFC;
