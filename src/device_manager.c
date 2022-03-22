@@ -365,7 +365,7 @@ static int insertDevice(void *data)
 static int convertToStructure(void *label, void *data)
 {
     cJSON *root = readJsonFile(DEVICE_LIST_FILE);
-    printfJson(root);
+//    printfJson(root);
 
     cJSON *device_list = cJSON_GetObjectItem(root, "device_list");
     if (NULL != device_list) {

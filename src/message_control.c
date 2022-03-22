@@ -320,13 +320,13 @@ static void voltageCurrentSensorPublish(void *data)
 
     cJSON *item = cJSON_CreateObject();
 
-    printf("publish->voltage: %s, atof(publish->voltage): %f\n", publish->voltage, atof(publish->voltage));
-    printf("publish->current: %s, atof(publish->current): %f\n", publish->current, atof(publish->current));
+//    printf("publish->voltage: %s, atof(publish->voltage): %f\n", publish->voltage, atof(publish->voltage));
+//    printf("publish->current: %s, atof(publish->current): %f\n", publish->current, atof(publish->current));
     cJSON_AddNumberToObject(item, "voltage", atof(publish->voltage));
     cJSON_AddNumberToObject(item, "current", atof(publish->current)/1000);
 
     char *cjson = cJSON_Print(item);
-    printf("voltageCurrentSensorPublish json:%s\n", cjson);
+//    printf("voltageCurrentSensorPublish json:%s\n", cjson);
 
     char transmit[128] = {0};
     memset(transmit, 0, sizeof(transmit));
