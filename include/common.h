@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #define ARRIVED_MESSAGE_LEN 2048
-//#define HOMEASSISTANT_ENABLE 1
+#define HOMEASSISTANT_ENABLE 1
 
 #pragma pack(1)
 typedef struct PayloadPackage {
