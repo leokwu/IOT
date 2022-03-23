@@ -546,7 +546,7 @@ void parse_device_power_consumption(const void *data)
 
     uint32_t key = htobe32(msg_pkg->key);
     uint8_t vlength = msg_pkg->vlength;
-    uint16_t power_consumption = msg_pkg->value[0] << 8 | msg_pkg->value[1];
+    uint16_t power_consumption = msg_pkg->value[1] << 8 | msg_pkg->value[0];
     printf("%s, key: %d vlength: %d power_consumption: %d\n", __func__ , key, vlength, power_consumption);
 
     PCPublish publish = {0};
