@@ -84,7 +84,7 @@ void onSendFailure(void* context, MQTTAsync_failureData* response)
 
 void onSend(void* context, MQTTAsync_successData* response)
 {
-    printf("publish message success\n");
+//    printf("publish message success\n");
 }
 
 
@@ -98,7 +98,7 @@ void onConnectFailure(void* context, MQTTAsync_failureData* response)
 
 void onSubscribe(void* context, MQTTAsync_successData* response)
 {
-    printf("Subscribe succeeded\n");
+//    printf("Subscribe succeeded\n");
 }
 
 void onSubscribeFailure(void* context, MQTTAsync_failureData* response)
@@ -127,7 +127,7 @@ void mqttMessagePublish(const char* topic, void *payload)
     MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
     int rc;
 
-    printf("Successful connection\n");
+//    printf("Successful connection\n");
     opts.onSuccess = onSend;
     opts.onFailure = onSendFailure;
     opts.context = client;
@@ -155,9 +155,9 @@ void mqttMessageSubscribe(const char* topic)
     MQTTAsync_responseOptions opts = MQTTAsync_responseOptions_initializer;
     int rc;
 
-    printf("Successful connection\n");
+//    printf("Successful connection\n");
 
-    printf("Subscribing to topic %s\nfor client %s using QoS %d\n\n", topic, CLIENTID, QOS);
+//    printf("Subscribing to topic %s\nfor client %s using QoS %d\n\n", topic, CLIENTID, QOS);
     opts.onSuccess = onSubscribe;
     opts.onFailure = onSubscribeFailure;
     opts.context = client;

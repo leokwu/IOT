@@ -88,7 +88,7 @@ static void switchDiscovery(void *data)
     cJSON_AddStringToObject(item, "state_topic", transmit);
 
     char *cjson = cJSON_Print(item);
-    printf("json:%s\n", cjson);
+//    printf("json:%s\n", cjson);
 
 
     memset(transmit, 0, sizeof(transmit));
@@ -267,7 +267,7 @@ static void onlinePublish(void *data)
     cJSON_AddStringToObject(item, "status", online_publish->status);
 
     char *cjson = cJSON_Print(item);
-    printf("json:%s\n", cjson);
+//    printf("json:%s\n", cjson);
 
     mqttMessagePublish(ONLINE_TOPIC, cjson);
 
@@ -394,7 +394,7 @@ static void voltageCurrentPublish(void *data)
     cJSON_AddItemToObject(item, "properties", properties);
 
     char *cjson = cJSON_Print(item);
-    printf("json:%s\n", cjson);
+//    printf("json:%s\n", cjson);
 
     mqttMessagePublish(REPORT_PROPERTIES_TOPIC, cjson);
 
@@ -425,7 +425,7 @@ static void powerConsumptionPublish(void *data)
     cJSON_AddItemToObject(item, "properties", properties);
 
     char *cjson = cJSON_Print(item);
-    printf("json:%s\n", cjson);
+//    printf("json:%s\n", cjson);
 
     mqttMessagePublish(REPORT_PROPERTIES_TOPIC, cjson);
 

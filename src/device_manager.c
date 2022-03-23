@@ -192,6 +192,7 @@ static void freeJson(cJSON *json) {
 }
 
 
+#if 0
 static void printfJson(cJSON *json) {
     if (NULL == json) {
         return;
@@ -200,7 +201,7 @@ static void printfJson(cJSON *json) {
     printf("json:%s\n", cjson);
     free(cjson);
 }
-
+#endif
 
 static cJSON* readJsonFile(char *fileName) {
     if (NULL == fileName) {
