@@ -58,6 +58,8 @@ int32_t deserialize_device_message(const void *data)
     const struct parse_device_message_map map[] = { { DEVICE_ONLINE_OFFLINE, parse_device_online_offline },
                                              { DEVICE_DATA_UPLOAD, parse_device_data_upload },
                                              { DEVICE_POWER_CONSUMPTION, parse_device_power_consumption },
+                                             { DEVICE_SWITCH_STATUS, parse_device_switch_status },
+                                             { DEVICE_OVERLOAD_STATUS, parse_device_overload_status },
                                              { DEVICE_SOFT_LABEL, parse_device_soft_label } };
 
 

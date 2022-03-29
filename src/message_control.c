@@ -252,8 +252,6 @@ static void onlinePublish(void *data)
         return;
     }
 
-
-
 #if HOMEASSISTANT_ENABLE
 
     switchDiscovery(data);
@@ -286,11 +284,6 @@ static void switchStatePublish(void *data)
 {
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
-        return;
-    }
-
-    if (g_short_addr[1] == 0x00 && g_short_addr[2] == 0x00) {
-        printf("get shoet addr failed\n");
         return;
     }
 
@@ -375,14 +368,16 @@ static void voltageCurrentPublish(void *data)
 {
 
 
-#if HOMEASSISTANT_ENABLE
-    voltageCurrentSensorPublish(data);
-#else
-
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
         return;
     }
+
+#if HOMEASSISTANT_ENABLE
+    voltageCurrentSensorPublish(data);
+#else
+
+
 
     VCPublish* publish = (VCPublish*) data;
 
@@ -408,13 +403,15 @@ static void voltageCurrentPublish(void *data)
 
 static void powerConsumptionPublish(void *data)
 {
-#if HOMEASSISTANT_ENABLE
-    energySensorPublish(data);
-#else
+
     if (NULL == data) {
         printf("%s: input data null\n", __func__);
         return;
     }
+
+#if HOMEASSISTANT_ENABLE
+    energySensorPublish(data);
+#else
 
     PCPublish* publish = (PCPublish*) data;
 
@@ -436,6 +433,86 @@ static void powerConsumptionPublish(void *data)
     }
 #endif
 }
+
+
+static void switchStatusPublish(void *data)
+{
+
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+#if HOMEASSISTANT_ENABLE
+    switchControl *swicth_control = (switchControl *)data;
+    switchStatePublish((void *)swicth_control);
+#else
+
+
+    switchControl* publish = (switchControl*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON *properties = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "deviceId", (const char*)publish->deviceid);
+
+    char transmit[8] = {0};
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%d", publish->control);
+    cJSON_AddStringToObject(properties, "switchStatus", transmit);
+
+    cJSON_AddItemToObject(item, "properties", properties);
+
+    char *cjson = cJSON_Print(item);
+//    printf("json:%s\n", cjson);
+
+    mqttMessagePublish(REPORT_PROPERTIES_TOPIC, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+#endif
+}
+
+
+static void overloadStatusPublish(void *data)
+{
+
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+#if HOMEASSISTANT_ENABLE
+
+#else
+
+    OLPublish* publish = (OLPublish*) data;
+
+    cJSON *item = cJSON_CreateObject();
+    cJSON *properties = cJSON_CreateObject();
+    cJSON_AddStringToObject(item, "deviceId", (const char*)publish->deviceid);
+
+    char transmit[8] = {0};
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%d", publish->overload);
+    cJSON_AddStringToObject(properties, "overloadStatus", transmit);
+    cJSON_AddItemToObject(item, "properties", properties);
+
+    char *cjson = cJSON_Print(item);
+//    printf("json:%s\n", cjson);
+
+    mqttMessagePublish(REPORT_PROPERTIES_TOPIC, cjson);
+
+    freeJson(item);
+
+    if (cjson != NULL) {
+        free(cjson);
+    }
+#endif
+}
+
 
 
 static void softLabelPublish(void *data)
@@ -565,6 +642,76 @@ void parse_device_power_consumption(const void *data)
     powerConsumptionPublish((void*)&publish);
 
 }
+
+
+
+void parse_device_switch_status(const void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    PayloadPackage* payload = (PayloadPackage*) data;
+    MessagePackage *msg_pkg = (MessagePackage *)payload->message;
+
+    uint32_t key = htobe32(msg_pkg->key);
+    uint8_t vlength = msg_pkg->vlength;
+    uint8_t switch_status = msg_pkg->value[0];
+    printf("%s, key: %d vlength: %d switch_status: %d\n", __func__ , key, vlength, switch_status);
+
+    switchControl publish = {0};
+    snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             payload->id[0],
+             payload->id[1],
+             payload->id[2],
+             payload->id[3],
+             payload->pid[0],
+             payload->pid[1],
+             payload->vid[0],
+             payload->vid[1]);
+
+//    int pc_transmit = (int)switch_status;
+//    snprintf(publish.control, sizeof(publish.control), "%d", pc_transmit);
+    publish.control = (int)switch_status;
+    switchStatusPublish((void*)&publish);
+
+}
+
+
+void parse_device_overload_status(const void *data)
+{
+    if (NULL == data) {
+        printf("%s: input data null\n", __func__);
+        return;
+    }
+
+    PayloadPackage* payload = (PayloadPackage*) data;
+    MessagePackage *msg_pkg = (MessagePackage *)payload->message;
+
+    uint32_t key = htobe32(msg_pkg->key);
+    uint8_t vlength = msg_pkg->vlength;
+    uint8_t overload_status = msg_pkg->value[0];
+    printf("%s, key: %d vlength: %d overload_status: %d\n", __func__ , key, vlength, overload_status);
+
+    OLPublish publish = {0};
+    snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
+             payload->id[0],
+             payload->id[1],
+             payload->id[2],
+             payload->id[3],
+             payload->pid[0],
+             payload->pid[1],
+             payload->vid[0],
+             payload->vid[1]);
+
+//    int pc_transmit = (int)switch_status;
+//    snprintf(publish.control, sizeof(publish.control), "%d", pc_transmit);
+    publish.overload = (int)overload_status;
+    overloadStatusPublish((void*)&publish);
+
+}
+
 
 
 void parse_device_soft_label(const void *data)
@@ -716,6 +863,11 @@ void parse_cloud_switch(const void *data)
     }
     memcpy(swicth_control.deviceid, pb_arrived->deviceid, sizeof(swicth_control.deviceid));
     writeSwitchControl((void *)&swicth_control);
+
+    if (g_short_addr[1] == 0x00 && g_short_addr[2] == 0x00) {
+        printf("get short addr failed\n");
+        return;
+    }
     switchStatePublish((void *)&swicth_control);
 
 #else

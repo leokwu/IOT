@@ -13,6 +13,8 @@ extern "C" {
 void parse_device_online_offline(const void *data);
 void parse_device_data_upload(const void *data);
 void parse_device_power_consumption(const void *data);
+void parse_device_switch_status(const void *data);
+void parse_device_overload_status(const void *data);
 void parse_device_soft_label(const void *data);
 
 // cloud
@@ -40,34 +42,40 @@ typedef struct SwitchPackage {
 } SwitchPackage;
 
 
-// #pragma pack(1)
+
 typedef struct OnlinePublish {
     uint8_t deviceid[64];
     char status[2];
 } OnlinePublish;
 
 
-// #pragma pack(1)
+
 typedef struct VCPublish {
     uint8_t deviceid[64];
     char voltage[8];
     char current[8];
 } VCPublish;
 
-// #pragma pack(1)
+
 typedef struct PCPublish {
     uint8_t deviceid[64];
     char power[8];
 } PCPublish;
 
 
-// #pragma pack(1)
+
 typedef struct SLPublish {
     uint8_t deviceid[64];
     char mac[32];
 } SLPublish;
 
-// #pragma pack(1)
+
+typedef struct OLPublish {
+    char deviceid[64];
+    int overload;
+} OLPublish;
+
+
 typedef struct switchControl {
     char deviceid[64];
     int control;

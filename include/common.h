@@ -16,6 +16,7 @@ extern "C" {
 #define ARRIVED_MESSAGE_LEN 2048
 #define HOMEASSISTANT_ENABLE 1
 
+
 #pragma pack(1)
 typedef struct PayloadPackage {
     uint16_t total;
@@ -27,7 +28,7 @@ typedef struct PayloadPackage {
     uint8_t  message[];
 } PayloadPackage;
 
-//#pragma pack(1)
+
 typedef struct MessagePackage {
     uint32_t key;
     uint8_t vlength;
@@ -36,7 +37,7 @@ typedef struct MessagePackage {
 
 
 
-//#pragma pack(1)
+
 typedef struct DeviceInfo {
     uint8_t id[4];
     uint8_t pid[2];
@@ -45,7 +46,7 @@ typedef struct DeviceInfo {
 } DeviceInfo;
 
 
-//#pragma pack(1)
+
 typedef struct PublishArrived {
     uint32_t function;
 #if HOMEASSISTANT_ENABLE
@@ -62,6 +63,8 @@ enum device_message_key {
     DEVICE_DATA_UPLOAD = 0x00000002,
     DEVICE_POWER_CONSUMPTION = 0x00000003,
     DEVICE_SOFT_LABEL = 0x00000004,
+    DEVICE_SWITCH_STATUS = 0x00000005,
+    DEVICE_OVERLOAD_STATUS = 0x00000006,
 
 };
 
