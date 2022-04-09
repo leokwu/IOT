@@ -344,7 +344,12 @@ static void energySensorPublish(void *data)
     PCPublish* publish = (PCPublish*) data;
 
     cJSON *item = cJSON_CreateObject();
-    cJSON_AddNumberToObject(item, "energy", atof(publish->power)/1000);
+
+    char transmit_power[128] = {0};
+    memset(transmit_power, 0, sizeof(transmit_power));
+    snprintf(transmit_power, sizeof(transmit_power), "%f", publish->power/1000);
+    cJSON_AddNumberToObject(item, "energy", atof(transmit_power));
+//    cJSON_AddNumberToObject(item, "energy", publish->power/1000);
 
     char *cjson = cJSON_Print(item);
     printf("energySensorPublish json:%s\n", cjson);
@@ -418,7 +423,11 @@ static void powerConsumptionPublish(void *data)
     cJSON *item = cJSON_CreateObject();
     cJSON *properties = cJSON_CreateObject();
     cJSON_AddStringToObject(item, "deviceId", (const char*)publish->deviceid);
-    cJSON_AddStringToObject(properties, "powerConsumption", publish->power);
+
+    char transmit[128] = {0};
+    memset(transmit, 0, sizeof(transmit));
+    snprintf(transmit, sizeof(transmit), "%f", publish->power/1000);
+    cJSON_AddStringToObject(properties, "powerConsumption", transmit);
     cJSON_AddItemToObject(item, "properties", properties);
 
     char *cjson = cJSON_Print(item);
@@ -623,8 +632,14 @@ void parse_device_power_consumption(const void *data)
 
     uint32_t key = htobe32(msg_pkg->key);
     uint8_t vlength = msg_pkg->vlength;
-    uint16_t power_consumption = msg_pkg->value[1] << 8 | msg_pkg->value[0];
-    printf("%s, key: %d vlength: %d power_consumption: %d\n", __func__ , key, vlength, power_consumption);
+//    float power_consumption = msg_pkg->value[0] << 24 | msg_pkg->value[1] << 16 | msg_pkg->value[2] << 8 | msg_pkg->value[3];
+    PCTSPublish power_consumption = {0};
+    power_consumption.power_data[0] = msg_pkg->value[0];
+    power_consumption.power_data[1] = msg_pkg->value[1];
+    power_consumption.power_data[2] = msg_pkg->value[2];
+    power_consumption.power_data[3] = msg_pkg->value[3];
+    printf("%s, key: %d vlength: %d power_consumption.power: %f\n", __func__ , key, vlength, power_consumption.power);
+
 
     PCPublish publish = {0};
     snprintf((char *)publish.deviceid, sizeof(publish.deviceid), "%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -637,8 +652,9 @@ void parse_device_power_consumption(const void *data)
              payload->vid[0],
              payload->vid[1]);
 
-    int pc_transmit = (int)power_consumption;
-    snprintf(publish.power, sizeof(publish.power), "%d", pc_transmit);
+    publish.power = power_consumption.power;
+//    float pc_transmit = (float)power_consumption;
+//    snprintf(publish.power, sizeof(publish.power), "%f", pc_transmit);
     powerConsumptionPublish((void*)&publish);
 
 }

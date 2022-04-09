@@ -59,10 +59,13 @@ typedef struct VCPublish {
 
 typedef struct PCPublish {
     uint8_t deviceid[64];
-    char power[8];
+    float power;
 } PCPublish;
 
-
+typedef union PCTSPublish {
+    uint8_t power_data[4];
+    float power;
+} PCTSPublish;
 
 typedef struct SLPublish {
     uint8_t deviceid[64];
